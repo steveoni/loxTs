@@ -1,0 +1,40 @@
+Arguments: 
+  /Users/steveoni/.nvm/versions/node/v16.3.0/bin/node /usr/local/bin/yarn add typescript --dev
+
+PATH: 
+  /Users/steveoni/.poetry/bin:/Users/steveoni/.poetry/bin:/Users/steveoni/.nvm/versions/node/v16.3.0/bin:/Users/steveoni/.nvm/versions/node/v16.3.0/bin:/Users/steveoni/anaconda3/bin:/Library/Frameworks/Python.framework/Versions/3.8/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/steveoni/.poetry/bin:/Users/steveoni/anaconda3/bin:/Users/steveoni/anaconda3/condabin:/Users/steveoni/.nvm/versions/node/v16.3.0/bin:/Library/Frameworks/Python.framework/Versions/3.8/bin
+
+Yarn version: 
+  1.22.10
+
+Node version: 
+  16.3.0
+
+Platform: 
+  darwin x64
+
+Trace: 
+  Error: https://registry.yarnpkg.com/typescript/-/typescript-4.5.5.tgz: ESOCKETTIMEDOUT
+      at ClientRequest.<anonymous> (/usr/local/lib/node_modules/yarn/lib/cli.js:141289:19)
+      at Object.onceWrapper (node:events:513:28)
+      at ClientRequest.emit (node:events:394:28)
+      at TLSSocket.emitRequestTimeout (node:_http_client:761:9)
+      at Object.onceWrapper (node:events:513:28)
+      at TLSSocket.emit (node:events:406:35)
+      at TLSSocket.Socket._onTimeout (node:net:475:8)
+      at listOnTimeout (node:internal/timers:557:17)
+      at processTimers (node:internal/timers:500:7)
+
+npm manifest: 
+  {
+    "name": "loxTs",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "MIT"
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile
