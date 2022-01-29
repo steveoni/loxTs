@@ -39,10 +39,11 @@ export default class Lox {
     cli.on("line", (line)=>{
       line = line.trim()
 
-      if (line == "close") cli.close()
+      if (line == "exit") cli.close()
 
       try {
         this.run(line)
+        Lox.hadError = false
       } 
       catch (e) {
         console.error(e)
@@ -59,7 +60,7 @@ export default class Lox {
 
   private run(source: string) {
     const scanner = new Scanner(source)
-    const tokens = scanner.addTokens()
+    const tokens = scanner.scanTokens()
 
     for (let token of tokens) {
       console.log(token)
