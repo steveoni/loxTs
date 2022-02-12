@@ -5,7 +5,8 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "tslox-dev": "yarn build & ts-node-script ./src/index.ts"
+    "tslox-dev": "yarn build & ts-node-script ./src/index.ts",
+    "astgen": "yarn build & ts-node-script ./tools/index.ts "
   },
   "devDependencies": {
     "@types/node": "^17.0.10",

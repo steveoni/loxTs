@@ -6,7 +6,7 @@
     "moduleResolution": "node",
     "sourceMap": true,
     "outDir": "dist",
-    "rootDir": "./src", 
+    "rootDirs": ["./src", "./tools"]
   },
-  "lib": ["es2015"]
+  "laib": ["es2015"]
 }
