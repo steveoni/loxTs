@@ -1,9 +1,10 @@
 import { readFileSync } from 'fs'
 import { createInterface } from "readline"
 import Scanner from './scanner'
+import { Token, TokenType } from './tokens'
 
 export default class Lox {
-  static hadError: boolean = false
+  static hadError = false
   constructor(args: string[]) {
 
     if (args.length > 0) {
@@ -62,14 +63,14 @@ export default class Lox {
     const scanner = new Scanner(source)
     const tokens = scanner.scanTokens()
 
-    for (let token of tokens) {
+    for (const token of tokens) {
       console.log(token)
     }
   }
 
-  static error(line: number, message: string): void {
-    this.report(line, "", message)
-  };
+  // static error(line: number, message: string): void {
+  //   this.report(line, "", message)
+  // }
 
   private static report(line: number, where: string, message: string) {
     console.error(
@@ -77,6 +78,15 @@ export default class Lox {
     )
 
     Lox.hadError = true
+  }
+
+  static error(token: Token, message: string) {
+    if (token.type == TokenType.Eof) {
+      this.report(token.line, " at end", message)
+    }
+    else {
+      this.report(token.line, ` at '${token.lexeme}'`, message)
+    }
   }
   
 }
