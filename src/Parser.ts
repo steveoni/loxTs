@@ -1,6 +1,7 @@
 import { TokenType, Token } from './tokens'
 import * as Exprs from './Expr';
 import Lox from './lox';
+import { error } from 'console';
 
 class Parser {
   private readonly tokens: Token[]
@@ -8,6 +9,17 @@ class Parser {
 
   constructor(tokens: Token[]) {
     this.tokens = tokens
+  }
+
+  public parse(): Exprs.Expr {
+    try {
+      return this.expression()
+    } 
+    catch (err) {
+      if (err instanceof ParseError) {
+        return null;
+      }
+    }
   }
 
   private expression(): Exprs.Expr {
@@ -114,6 +126,8 @@ class Parser {
       this.consume(TokenType.RightParen, "Expect ')' after expression.")
       return new Exprs.GroupingExpr(expr)
     }
+
+    throw this.error(this.peek(), "Expect expression.")
   }
 
   private consume(ttype: TokenType, message: string): Token {
@@ -126,6 +140,26 @@ class Parser {
     return new ParseError()
   }
 
+  private synchronize() {
+    this.advance()
+
+    while( !this.isAtEnd()) {
+      if (this.previous().type === TokenType.SemiColon) return;
+
+      switch(this.peek().type) {
+        case TokenType.Class:
+        case TokenType.Fun:
+        case TokenType.Var:
+        case TokenType.For:
+        case TokenType.If:
+        case TokenType.While:
+        case TokenType.Print:
+        case TokenType.Return:
+          return ;
+      }
+      this.advance()
+    }
+  }
 }
 
 class ParseError extends Error {
