@@ -2,6 +2,8 @@ import { readFileSync } from 'fs'
 import { createInterface } from "readline"
 import Scanner from './scanner'
 import { Token, TokenType } from './tokens'
+import Parser from './Parser'
+import AstPrinter from "./AstPrinter"
 
 export default class Lox {
   static hadError = false
@@ -21,7 +23,7 @@ export default class Lox {
       const source = readFileSync(path).toString()
       this.run(source)
     }
-    catch (e){
+    catch (e) {
       console.error(e)
     }
 
@@ -37,7 +39,7 @@ export default class Lox {
       output: process.stdout
     })
 
-    cli.on("line", (line)=>{
+    cli.on("line", (line) => {
       line = line.trim()
 
       if (line == "exit") cli.close()
@@ -45,14 +47,14 @@ export default class Lox {
       try {
         this.run(line)
         Lox.hadError = false
-      } 
+      }
       catch (e) {
         console.error(e)
       }
       cli.prompt()
     })
 
-    cli.on("close", ()=> {
+    cli.on("close", () => {
       process.exit(0)
     })
 
@@ -62,10 +64,12 @@ export default class Lox {
   private run(source: string) {
     const scanner = new Scanner(source)
     const tokens = scanner.scanTokens()
+    const parser = new Parser(tokens)
+    const expression = parser.parse()
 
-    for (const token of tokens) {
-      console.log(token)
-    }
+    if (Lox.hadError) return;
+
+    console.log(new AstPrinter().print(expression))
   }
 
   // static error(line: number, message: string): void {
@@ -80,13 +84,18 @@ export default class Lox {
     Lox.hadError = true
   }
 
-  static error(token: Token, message: string) {
-    if (token.type == TokenType.Eof) {
-      this.report(token.line, " at end", message)
+  static error(token: Token | number, message: string) {
+    if (token instanceof Token) {
+      if (token.type == TokenType.Eof) {
+        this.report(token.line, " at end", message)
+      }
+      else {
+        this.report(token.line, ` at '${token.lexeme}'`, message)
+      }
     }
     else {
-      this.report(token.line, ` at '${token.lexeme}'`, message)
+      this.report(token, "", message)
     }
   }
-  
+
 }

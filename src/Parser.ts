@@ -3,7 +3,7 @@ import * as Exprs from './Expr';
 import Lox from './lox';
 import { error } from 'console';
 
-class Parser {
+export default class Parser {
   private readonly tokens: Token[]
   private current = 0
 
@@ -14,7 +14,7 @@ class Parser {
   public parse(): Exprs.Expr {
     try {
       return this.expression()
-    } 
+    }
     catch (err) {
       if (err instanceof ParseError) {
         return null;
@@ -76,7 +76,7 @@ class Parser {
     while (this.match(TokenType.Greater, TokenType.GreaterEqual, TokenType.Less, TokenType.LessEqual)) {
       const operator = this.previous()
       const right = this.term()
-      expr  = new Exprs.BinaryExpr(expr, operator, right)
+      expr = new Exprs.BinaryExpr(expr, operator, right)
     }
     return expr
   }
@@ -143,10 +143,10 @@ class Parser {
   private synchronize() {
     this.advance()
 
-    while( !this.isAtEnd()) {
+    while (!this.isAtEnd()) {
       if (this.previous().type === TokenType.SemiColon) return;
 
-      switch(this.peek().type) {
+      switch (this.peek().type) {
         case TokenType.Class:
         case TokenType.Fun:
         case TokenType.Var:
@@ -155,7 +155,7 @@ class Parser {
         case TokenType.While:
         case TokenType.Print:
         case TokenType.Return:
-          return ;
+          return;
       }
       this.advance()
     }

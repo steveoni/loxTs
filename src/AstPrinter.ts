@@ -6,7 +6,6 @@ export default class AstPrinter implements Expr.Visitor<string> {
   }
 
   visitBinaryExpr(expr: Expr.BinaryExpr): string {
-    console.log("Binary here")
     return this.parenthesize(expr.operator.lexeme, expr.left, expr.right)
   }
 
@@ -26,11 +25,11 @@ export default class AstPrinter implements Expr.Visitor<string> {
   private parenthesize(name: string, ...exprs: Expr.Expr[]): string {
     const builder = []
     builder.push("(")
+    builder.push(name)
     for (const expr of exprs) {
       builder.push(" ")
       builder.push(expr.accept(this))
     }
-    builder.push(name)
     builder.push(")");
     return builder.join("")
   }

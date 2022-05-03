@@ -6,6 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = require("fs");
 const readline_1 = require("readline");
 const scanner_1 = __importDefault(require("./scanner"));
+const tokens_1 = require("./tokens");
+const Parser_1 = __importDefault(require("./Parser"));
+const AstPrinter_1 = __importDefault(require("./AstPrinter"));
 class Lox {
     constructor(args) {
         if (args.length > 0) {
@@ -54,17 +57,31 @@ class Lox {
     run(source) {
         const scanner = new scanner_1.default(source);
         const tokens = scanner.scanTokens();
-        for (let token of tokens) {
-            console.log(token);
-        }
+        const parser = new Parser_1.default(tokens);
+        const expression = parser.parse();
+        if (Lox.hadError)
+            return;
+        console.log(new AstPrinter_1.default().print(expression));
     }
-    static error(line, message) {
-        this.report(line, "", message);
-    }
-    ;
+    // static error(line: number, message: string): void {
+    //   this.report(line, "", message)
+    // }
     static report(line, where, message) {
         console.error(`[Line ${line} ] Error ${where} : ${message}`);
         Lox.hadError = true;
+    }
+    static error(token, message) {
+        if (token instanceof tokens_1.Token) {
+            if (token.type == tokens_1.TokenType.Eof) {
+                this.report(token.line, " at end", message);
+            }
+            else {
+                this.report(token.line, ` at '${token.lexeme}'`, message);
+            }
+        }
+        else {
+            this.report(token, "", message);
+        }
     }
 }
 exports.default = Lox;

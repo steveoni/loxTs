@@ -5,7 +5,6 @@ class AstPrinter {
         return expr.accept(this);
     }
     visitBinaryExpr(expr) {
-        console.log("Binary here");
         return this.parenthesize(expr.operator.lexeme, expr.left, expr.right);
     }
     visitGroupingExpr(expr) {
@@ -22,11 +21,11 @@ class AstPrinter {
     parenthesize(name, ...exprs) {
         const builder = [];
         builder.push("(");
+        builder.push(name);
         for (const expr of exprs) {
             builder.push(" ");
             builder.push(expr.accept(this));
         }
-        builder.push(name);
         builder.push(")");
         return builder.join("");
     }
