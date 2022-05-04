@@ -1,0 +1,1 @@
+{"version":3,"file":"RuntimeError.js","sourceRoot":"","sources":["../../src/RuntimeError.ts"],"names":[],"mappings":";;AAEA,MAAqB,YAAa,SAAQ,KAAK;IAE7C,YAAY,KAAY,EAAE,OAAe;QACvC,KAAK,CAAC,OAAO,CAAC,CAAA;QACd,IAAI,CAAC,KAAK,GAAG,KAAK,CAAA;QAClB,IAAI,CAAC,IAAI,GAAG,cAAc,CAAA;IAC5B,CAAC;CACF;AAPD,+BAOC"}

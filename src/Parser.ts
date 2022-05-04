@@ -1,7 +1,7 @@
 import { TokenType, Token } from './tokens'
 import * as Exprs from './Expr';
 import Lox from './lox';
-import { error } from 'console';
+
 
 export default class Parser {
   private readonly tokens: Token[]

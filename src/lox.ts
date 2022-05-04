@@ -4,9 +4,13 @@ import Scanner from './scanner'
 import { Token, TokenType } from './tokens'
 import Parser from './Parser'
 import AstPrinter from "./AstPrinter"
+import RuntimeError from './RuntimeError'
+import Interpreter from './Interpreter'
 
 export default class Lox {
   static hadError = false
+  static hadRuntimeError = false
+  private static readonly interpreter = new Interpreter()
   constructor(args: string[]) {
 
     if (args.length > 0) {
@@ -28,6 +32,7 @@ export default class Lox {
     }
 
     if (Lox.hadError) process.exit(65)
+    if (Lox.hadRuntimeError) process.exit(70)
   }
 
   private runPrompt(): void {
@@ -69,7 +74,7 @@ export default class Lox {
 
     if (Lox.hadError) return;
 
-    console.log(new AstPrinter().print(expression))
+    Lox.interpreter.interpret(expression)
   }
 
   // static error(line: number, message: string): void {
@@ -96,6 +101,12 @@ export default class Lox {
     else {
       this.report(token, "", message)
     }
+  }
+
+  static runtimeError(error: RuntimeError) {
+    console.error(`${error.message} + 
+      \n[Line ${error.token.line}]`)
+    Lox.hadRuntimeError = true;
   }
 
 }

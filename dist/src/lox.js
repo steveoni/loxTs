@@ -8,7 +8,7 @@ const readline_1 = require("readline");
 const scanner_1 = __importDefault(require("./scanner"));
 const tokens_1 = require("./tokens");
 const Parser_1 = __importDefault(require("./Parser"));
-const AstPrinter_1 = __importDefault(require("./AstPrinter"));
+const Interpreter_1 = __importDefault(require("./Interpreter"));
 class Lox {
     constructor(args) {
         if (args.length > 0) {
@@ -28,6 +28,8 @@ class Lox {
         }
         if (Lox.hadError)
             process.exit(65);
+        if (Lox.hadRuntimeError)
+            process.exit(70);
     }
     runPrompt() {
         //REPL
@@ -61,7 +63,7 @@ class Lox {
         const expression = parser.parse();
         if (Lox.hadError)
             return;
-        console.log(new AstPrinter_1.default().print(expression));
+        Lox.interpreter.interpret(expression);
     }
     // static error(line: number, message: string): void {
     //   this.report(line, "", message)
@@ -83,7 +85,14 @@ class Lox {
             this.report(token, "", message);
         }
     }
+    static runtimeError(error) {
+        console.error(`${error.message} + 
+      \n[Line ${error.token.line}]`);
+        Lox.hadRuntimeError = true;
+    }
 }
 exports.default = Lox;
 Lox.hadError = false;
+Lox.hadRuntimeError = false;
+Lox.interpreter = new Interpreter_1.default();
 //# sourceMappingURL=lox.js.map
