@@ -2,9 +2,13 @@ import * as Expr from './Expr';
 import { TokenType, Token } from './tokens'
 import RuntimeError from './RuntimeError'
 import Lox from './lox';
+import * as Stmt from './Stmt'
+import Environment from './Environment'
+import { env } from 'process';
 
-export default class Interpreter implements Expr.Visitor<any> {
+export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void> {
 
+  private environment = new Environment()
   public visitLiteralExpr(expr: Expr.LiteralExpr) {
     return expr.value
   }
@@ -16,6 +20,57 @@ export default class Interpreter implements Expr.Visitor<any> {
   private evaluate(expr: Expr.Expr) {
     return expr.accept(this)
   }
+
+  private execute(stmt: Stmt.Stmt) {
+    stmt.accept(this)
+  }
+
+  executeBlock(statements: Stmt.Stmt[], environment: Environment ) {
+    const previous = this.environment;
+
+    try {
+      this.environment = environment
+
+      for (const statement of statements) {
+        this.execute(statement)
+      }
+
+    } finally {
+      this.environment = previous
+    }
+  }
+
+  public visitBlockStmt(stmt: Stmt.BlockStmt) {
+    this.executeBlock(stmt.statements, new Environment(this.environment))
+    return null;
+  }
+
+  public visitExpressionStmt(stmt: Stmt.ExpressionStmt) {
+    this.evaluate(stmt.expression)
+    return null
+  }
+
+  public visitPrintStmt(stmt: Stmt.PrintStmt) {
+    const value = this.evaluate(stmt.expression)
+    console.log(this.stringify(value))
+    return null
+  }
+
+  public visitVarStmt(stmt: Stmt.VarStmt) {
+    let value = null;
+    if (stmt.initializer != null) {
+      value = this.evaluate(stmt.initializer)
+    }
+
+    this.environment.define(stmt.name.lexeme, value)
+    return null;
+  }
+
+  public visitAssignExpr(expr: Expr.AssignExpr) {
+    const value = this.evaluate(expr.value)
+    this.environment.assign(expr.name, value)
+  }
+
   public visitUnaryExpr(expr: Expr.UnaryExpr) {
     const right = this.evaluate(expr.right)
 
@@ -27,6 +82,10 @@ export default class Interpreter implements Expr.Visitor<any> {
       case TokenType.Bang:
         return !this.isTruthy(right)
     }
+  }
+
+  public visitVariableExpr(expr: Expr.VariableExpr) {
+    return this.environment.get(expr.name)
   }
 
   private checkNumberOperand(operator: Token, operand: any) {
@@ -95,10 +154,11 @@ export default class Interpreter implements Expr.Visitor<any> {
     return (a === b)
   }
 
-  interpret(expression: Expr.Expr): void {
+  interpret(statements: Stmt.Stmt[]): void {
     try {
-      const value = this.evaluate(expression)
-      console.log(this.stringify(value))
+      for (let i = 0; i < statements.length; i++) {
+        this.execute(statements[i])
+      }
     } catch (error) {
       Lox.runtimeError(error)
     }

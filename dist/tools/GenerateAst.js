@@ -9,16 +9,30 @@ class GenerateAst {
         }
         const outputDir = args[0];
         GenerateAst.defineAst(outputDir, 'Expr', {
+            Assign: "name: Token, value: Expr",
             Binary: "left: Expr, operator: Token, right: Expr",
             Grouping: "expression: Expr",
             Literal: "value: string | number | boolean",
-            Unary: "operator: Token, right: Expr"
+            Unary: "operator: Token, right: Expr",
+            Variable: "name: Token"
+        });
+        GenerateAst.defineAst(outputDir, 'Stmt', {
+            Block: "statements: Stmt[]",
+            Expression: "expression: Expr",
+            Print: "expression: Expr ",
+            Var: "name: Token, initializer: Expr"
         });
     }
     static defineAst(outputDir, baseName, types) {
         const path = outputDir + "/" + baseName + ".ts";
         const writer = [];
-        writer.push('import { Token } from "./tokens";\n\n\n');
+        if (baseName !== "Expr") {
+            writer.push('import { Token } from "./tokens";\n');
+            writer.push('import { Expr } from "./Expr";\n\n\n');
+        }
+        else {
+            writer.push('import { Token } from "./tokens";\n\n\n');
+        }
         writer.push(`export interface ${baseName} {\n`);
         writer.push(`  accept<R>(visitor: Visitor<R>): R\n`);
         writer.push(`}\n\n`);

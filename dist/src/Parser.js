@@ -25,23 +25,69 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const tokens_1 = require("./tokens");
 const Exprs = __importStar(require("./Expr"));
 const lox_1 = __importDefault(require("./lox"));
+const Stmt_1 = require("./Stmt");
 class Parser {
     constructor(tokens) {
         this.current = 0;
         this.tokens = tokens;
     }
     parse() {
-        try {
-            return this.expression();
+        const statements = [];
+        while (!this.isAtEnd()) {
+            statements.push(this.declaration());
         }
-        catch (err) {
-            if (err instanceof ParseError) {
-                return null;
-            }
-        }
+        return statements;
     }
     expression() {
-        return this.equality();
+        return this.assignment();
+    }
+    declaration() {
+        try {
+            if (this.match(tokens_1.TokenType.Var))
+                return this.varDeclaration();
+            return this.statement();
+        }
+        catch (error) {
+            this.synchronize();
+            return null;
+        }
+    }
+    varDeclaration() {
+        const name = this.consume(tokens_1.TokenType.Identifier, "Expect variable name.");
+        let initializer;
+        if (this.match(tokens_1.TokenType.Equal)) {
+            initializer = this.expression();
+        }
+        this.consume(tokens_1.TokenType.SemiColon, "Expect ';' after variable declaration.");
+        return new Stmt_1.VarStmt(name, initializer);
+    }
+    statement() {
+        if (this.match(tokens_1.TokenType.Print))
+            return this.printStatement();
+        return this.expressionStatement();
+    }
+    printStatement() {
+        const value = this.expression();
+        this.consume(tokens_1.TokenType.SemiColon, "Expect ';' after value.");
+        return new Stmt_1.PrintStmt(value);
+    }
+    expressionStatement() {
+        const value = this.expression();
+        this.consume(tokens_1.TokenType.SemiColon, "Expect ';' after value.");
+        return new Stmt_1.ExpressionStmt(value);
+    }
+    assignment() {
+        let expr = this.equality();
+        if (this.match(tokens_1.TokenType.Equal)) {
+            const equals = this.previous();
+            const value = this.assignment();
+            if (expr instanceof Exprs.VariableExpr) {
+                const name = expr.name;
+                return new Exprs.AssignExpr(name, value);
+            }
+            this.error(equals, "Invalid assignment target.");
+        }
+        return expr;
     }
     equality() {
         let expr = this.comparison();
@@ -124,6 +170,9 @@ class Parser {
             return new Exprs.LiteralExpr(null);
         if (this.match(tokens_1.TokenType.Number, tokens_1.TokenType.String)) {
             return new Exprs.LiteralExpr(this.previous().literal);
+        }
+        if (this.match(tokens_1.TokenType.Identifier)) {
+            return new Exprs.VariableExpr(this.previous());
         }
         if (this.match(tokens_1.TokenType.LeftParen)) {
             const expr = this.expression();

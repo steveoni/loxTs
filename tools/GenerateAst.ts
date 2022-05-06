@@ -7,18 +7,32 @@ export default class GenerateAst {
       process.exit(64)
     }
     const outputDir = args[0];
-    GenerateAst.defineAst(outputDir, 'Expr',  {
-      Binary   : "left: Expr, operator: Token, right: Expr",
-      Grouping : "expression: Expr",
-      Literal  : "value: string | number | boolean",
-      Unary    : "operator: Token, right: Expr"
+    GenerateAst.defineAst(outputDir, 'Expr', {
+      Assign: "name: Token, value: Expr",
+      Binary: "left: Expr, operator: Token, right: Expr",
+      Grouping: "expression: Expr",
+      Literal: "value: string | number | boolean",
+      Unary: "operator: Token, right: Expr",
+      Variable: "name: Token"
+    });
+
+    GenerateAst.defineAst(outputDir, 'Stmt', {
+      Block: "statements: Stmt[]",
+      Expression: "expression: Expr",
+      Print: "expression: Expr ",
+      Var: "name: Token, initializer: Expr"
     });
   }
 
-  private static defineAst(outputDir: string, baseName: string, types: {[key: string]: string}): void {
+  private static defineAst(outputDir: string, baseName: string, types: { [key: string]: string }): void {
     const path = outputDir + "/" + baseName + ".ts";
     const writer = []
-    writer.push('import { Token } from "./tokens";\n\n\n')
+    if (baseName !== "Expr" ) {
+      writer.push('import { Token } from "./tokens";\n')
+      writer.push('import { Expr } from "./Expr";\n\n\n')
+    } else {
+      writer.push('import { Token } from "./tokens";\n\n\n')
+    }
     writer.push(`export interface ${baseName} {\n`)
     writer.push(`  accept<R>(visitor: Visitor<R>): R\n`)
     writer.push(`}\n\n`)
@@ -35,13 +49,13 @@ export default class GenerateAst {
 
   private static defineType(writer: string[], baseName, className: string, fieldList: string): void {
     const fields: string[] = fieldList.split(", ")
-    writer.push(`export class ${className + baseName } implements ${baseName} {\n`)
-    for(const field of fields) {
+    writer.push(`export class ${className + baseName} implements ${baseName} {\n`)
+    for (const field of fields) {
       writer.push(`  ${field}\n`)
     }
 
     writer.push(`  constructor ( ${fieldList} ) {\n`)
-    for( const field of fields) {
+    for (const field of fields) {
       const name: string = field.split(":")[0]
       writer.push(`    this.${name} = ${name};\n`);
     }
@@ -54,7 +68,7 @@ export default class GenerateAst {
     writer.push("}\n\n")
   }
 
-  private static defineVisitor(writer: string[], baseName: string, types: {[key: string]: string}): void {
+  private static defineVisitor(writer: string[], baseName: string, types: { [key: string]: string }): void {
     writer.push("export interface Visitor<R> {\n");
 
     for (const type of Object.keys(types)) {
@@ -63,5 +77,5 @@ export default class GenerateAst {
     writer.push("  }\n\n")
   }
 
-  
+
 }

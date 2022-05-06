@@ -6,7 +6,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const tokens_1 = require("./tokens");
 const RuntimeError_1 = __importDefault(require("./RuntimeError"));
 const lox_1 = __importDefault(require("./lox"));
+const Environment_1 = __importDefault(require("./Environment"));
 class Interpreter {
+    constructor() {
+        this.environment = new Environment_1.default();
+    }
     visitLiteralExpr(expr) {
         return expr.value;
     }
@@ -15,6 +19,30 @@ class Interpreter {
     }
     evaluate(expr) {
         return expr.accept(this);
+    }
+    execute(stmt) {
+        stmt.accept(this);
+    }
+    visitExpressionStmt(stmt) {
+        this.evaluate(stmt.expression);
+        return null;
+    }
+    visitPrintStmt(stmt) {
+        const value = this.evaluate(stmt.expression);
+        console.log(this.stringify(value));
+        return null;
+    }
+    visitVarStmt(stmt) {
+        let value = null;
+        if (stmt.initializer != null) {
+            value = this.evaluate(stmt.initializer);
+        }
+        this.environment.define(stmt.name.lexeme, value);
+        return null;
+    }
+    visitAssignExpr(expr) {
+        const value = this.evaluate(expr.value);
+        this.environment.assign(expr.name, value);
     }
     visitUnaryExpr(expr) {
         const right = this.evaluate(expr.right);
@@ -26,6 +54,9 @@ class Interpreter {
             case tokens_1.TokenType.Bang:
                 return !this.isTruthy(right);
         }
+    }
+    visitVariableExpr(expr) {
+        return this.environment.get(expr.name);
     }
     checkNumberOperand(operator, operand) {
         if (typeof operand === "number")
@@ -90,10 +121,11 @@ class Interpreter {
             return false;
         return (a === b);
     }
-    interpret(expression) {
+    interpret(statements) {
         try {
-            const value = this.evaluate(expression);
-            console.log(this.stringify(value));
+            for (let i = 0; i < statements.length; i++) {
+                this.execute(statements[i]);
+            }
         }
         catch (error) {
             lox_1.default.runtimeError(error);

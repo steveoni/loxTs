@@ -1,6 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UnaryExpr = exports.LiteralExpr = exports.GroupingExpr = exports.BinaryExpr = void 0;
+exports.VariableExpr = exports.UnaryExpr = exports.LiteralExpr = exports.GroupingExpr = exports.BinaryExpr = exports.AssignExpr = void 0;
+class AssignExpr {
+    constructor(name, value) {
+        this.name = name;
+        this.value = value;
+    }
+    accept(visitor) {
+        return visitor.visitAssignExpr(this);
+    }
+}
+exports.AssignExpr = AssignExpr;
 class BinaryExpr {
     constructor(left, operator, right) {
         this.left = left;
@@ -40,4 +50,13 @@ class UnaryExpr {
     }
 }
 exports.UnaryExpr = UnaryExpr;
+class VariableExpr {
+    constructor(name) {
+        this.name = name;
+    }
+    accept(visitor) {
+        return visitor.visitVariableExpr(this);
+    }
+}
+exports.VariableExpr = VariableExpr;
 //# sourceMappingURL=Expr.js.map

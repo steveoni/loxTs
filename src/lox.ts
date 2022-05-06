@@ -3,7 +3,6 @@ import { createInterface } from "readline"
 import Scanner from './scanner'
 import { Token, TokenType } from './tokens'
 import Parser from './Parser'
-import AstPrinter from "./AstPrinter"
 import RuntimeError from './RuntimeError'
 import Interpreter from './Interpreter'
 
@@ -70,11 +69,11 @@ export default class Lox {
     const scanner = new Scanner(source)
     const tokens = scanner.scanTokens()
     const parser = new Parser(tokens)
-    const expression = parser.parse()
+    const statements = parser.parse()
 
     if (Lox.hadError) return;
-
-    Lox.interpreter.interpret(expression)
+    console.log(statements)
+    Lox.interpreter.interpret(statements)
   }
 
   // static error(line: number, message: string): void {
