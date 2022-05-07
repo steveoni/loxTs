@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.VariableExpr = exports.UnaryExpr = exports.LiteralExpr = exports.GroupingExpr = exports.BinaryExpr = exports.AssignExpr = void 0;
+exports.VariableExpr = exports.UnaryExpr = exports.LogicalExpr = exports.LiteralExpr = exports.GroupingExpr = exports.BinaryExpr = exports.AssignExpr = void 0;
 class AssignExpr {
     constructor(name, value) {
         this.name = name;
@@ -40,6 +40,17 @@ class LiteralExpr {
     }
 }
 exports.LiteralExpr = LiteralExpr;
+class LogicalExpr {
+    constructor(left, operator, right) {
+        this.left = left;
+        this.operator = operator;
+        this.right = right;
+    }
+    accept(visitor) {
+        return visitor.visitLogicalExpr(this);
+    }
+}
+exports.LogicalExpr = LogicalExpr;
 class UnaryExpr {
     constructor(operator, right) {
         this.operator = operator;

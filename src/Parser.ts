@@ -1,7 +1,13 @@
 import { TokenType, Token } from './tokens'
 import * as Exprs from './Expr';
 import Lox from './lox';
-import { Stmt, ExpressionStmt, PrintStmt, VarStmt, BlockStmt } from './Stmt'
+import { Stmt, 
+         ExpressionStmt, 
+         PrintStmt, 
+         VarStmt, 
+         BlockStmt,
+         IfStmt,
+         WhileStmt } from './Stmt'
 
 export default class Parser {
   private readonly tokens: Token[]
@@ -44,11 +50,75 @@ export default class Parser {
     return new VarStmt(name, initializer)
   }
 
+  private whileStatement() {
+    this.consume(TokenType.LeftParen, "Expect '(' after 'while'.")
+    const condition = this.expression()
+    this.consume(TokenType.RightParen, "Expect ')' after condition.")
+    const body = this.statement()
+    return new WhileStmt(condition, body)
+  }
+
   private statement(): Stmt {
+    if (this.match(TokenType.For)) return this.forStatement()
+    if (this.match(TokenType.If)) return this.ifStatement()
     if (this.match(TokenType.Print)) return this.printStatement();
+    if (this.match(TokenType.While)) return this.whileStatement()
     if (this.match(TokenType.LeftBrace)) return new BlockStmt(this.block())
 
     return this.expressionStatement();
+  }
+
+  private forStatement(): Stmt {
+    this.consume(TokenType.LeftParen, "Expect '(' after 'for'.")
+    let initializer: Stmt
+    if (this.match(TokenType.SemiColon)) {
+      initializer = null;
+    } else if (this.match(TokenType.Var)) {
+      initializer = this.varDeclaration()
+    } else {
+      initializer = this.expressionStatement()
+    }
+
+    let condition: Exprs.Expr = null
+    if (!this.check(TokenType.SemiColon)) {
+      condition = this.expression()
+    }
+    this.consume(TokenType.SemiColon, "Expect ';' after loop condition")
+
+    let increment: Exprs.Expr = null;
+    if (!this.check(TokenType.RightParen)) {
+      increment = this.expression()
+    }
+    this.consume(TokenType.RightParen, "Expect ')' after for clauses.")
+    let body = this.statement()
+
+    if (increment != null) {
+      body = new BlockStmt(
+        [
+          body,
+          new ExpressionStmt(increment)
+        ]
+      )
+    }
+    if (condition === null) condition = new Exprs.LiteralExpr(true);
+    body = new WhileStmt(condition, body)
+
+    if (initializer != null ) {
+      body = new BlockStmt([initializer, body])
+    }
+    return body
+  }
+
+  private ifStatement(): Stmt {
+    this.consume(TokenType.LeftParen, "Expect '('  after 'if'.")
+    const condition = this.expression()
+    this.consume(TokenType.RightParen, "Expect ')' after if condition.")
+    const thenBranch = this.statement()
+    let elseBranch = null;
+    if (this.match(TokenType.Else)) {
+      elseBranch = this.statement()
+    }
+    return new IfStmt(condition, thenBranch, elseBranch)
   }
 
   private printStatement(): Stmt {
@@ -75,7 +145,7 @@ export default class Parser {
   }
 
   private assignment(): Exprs.Expr {
-    let expr = this.equality()
+    let expr = this.or()
 
     if ( this.match(TokenType.Equal) ) {
       const equals = this.previous()
@@ -89,6 +159,29 @@ export default class Parser {
       this.error(equals, "Invalid assignment target.")
     }
 
+    return expr
+  }
+
+
+  private or(): Exprs.Expr {
+    let expr = this.and()
+
+    while (this.match(TokenType.Or)) {
+      const operator = this.previous()
+      const right = this.and()
+      expr = new Exprs.LogicalExpr(expr, operator, right)
+    }
+    return expr
+  }
+
+  private and(): Exprs.Expr {
+    let expr = this.equality()
+
+    while( this.match(TokenType.And)) {
+      const operator = this.previous()
+      const right = this.equality()
+      expr = new Exprs.LogicalExpr(expr, operator, right)
+    }
     return expr
   }
 

@@ -6,9 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const RuntimeError_1 = __importDefault(require("./RuntimeError"));
 class Environment {
     constructor(enclosing) {
-        this.enclosing = null;
         this.values = new Map();
-        this.enclosing = enclosing;
+        this.enclosing = enclosing || null;
     }
     define(name, value) {
         this.values.set(name, value);

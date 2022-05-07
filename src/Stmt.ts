@@ -9,8 +9,10 @@ export interface Stmt {
 export interface Visitor<R> {
   visitBlockStmt ( expr: BlockStmt ): R
   visitExpressionStmt ( expr: ExpressionStmt ): R
+  visitIfStmt ( expr: IfStmt ): R
   visitPrintStmt ( expr: PrintStmt ): R
   visitVarStmt ( expr: VarStmt ): R
+  visitWhileStmt ( expr: WhileStmt ): R
   }
 
 export class BlockStmt implements Stmt {
@@ -35,6 +37,21 @@ export class ExpressionStmt implements Stmt {
   }
 }
 
+export class IfStmt implements Stmt {
+  condition: Expr
+  thenBranch: Stmt
+  elseBranch: Stmt
+  constructor ( condition: Expr, thenBranch: Stmt, elseBranch: Stmt ) {
+    this.condition = condition;
+    this.thenBranch = thenBranch;
+    this.elseBranch = elseBranch;
+  }
+
+  accept<R>(visitor: Visitor<R>): R{
+    return visitor.visitIfStmt (this);
+  }
+}
+
 export class PrintStmt implements Stmt {
   expression: Expr 
   constructor ( expression: Expr  ) {
@@ -56,6 +73,19 @@ export class VarStmt implements Stmt {
 
   accept<R>(visitor: Visitor<R>): R{
     return visitor.visitVarStmt (this);
+  }
+}
+
+export class WhileStmt implements Stmt {
+  condition: Expr
+  body: Stmt
+  constructor ( condition: Expr, body: Stmt ) {
+    this.condition = condition;
+    this.body = body;
+  }
+
+  accept<R>(visitor: Visitor<R>): R{
+    return visitor.visitWhileStmt (this);
   }
 }
 

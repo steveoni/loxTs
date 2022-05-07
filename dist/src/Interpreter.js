@@ -14,6 +14,18 @@ class Interpreter {
     visitLiteralExpr(expr) {
         return expr.value;
     }
+    visitLogicalExpr(expr) {
+        const left = this.evaluate(expr.left);
+        if (expr.operator.type === tokens_1.TokenType.Or) {
+            if (this.isTruthy(left))
+                return left;
+        }
+        else {
+            if (!this.isTruthy(left))
+                return left;
+        }
+        return this.evaluate(expr.right);
+    }
     visitGroupingExpr(expr) {
         return this.evaluate(expr);
     }
@@ -23,8 +35,33 @@ class Interpreter {
     execute(stmt) {
         stmt.accept(this);
     }
+    executeBlock(statements, environment) {
+        const previous = this.environment;
+        try {
+            this.environment = environment;
+            for (const statement of statements) {
+                this.execute(statement);
+            }
+        }
+        finally {
+            this.environment = previous;
+        }
+    }
+    visitBlockStmt(stmt) {
+        this.executeBlock(stmt.statements, new Environment_1.default(this.environment));
+        return null;
+    }
     visitExpressionStmt(stmt) {
         this.evaluate(stmt.expression);
+        return null;
+    }
+    visitIfStmt(stmt) {
+        if (this.isTruthy(this.evaluate(stmt.condition))) {
+            this.execute(stmt.thenBranch);
+        }
+        else if (stmt.thenBranch != null) {
+            this.execute(stmt.elseBranch);
+        }
         return null;
     }
     visitPrintStmt(stmt) {
@@ -38,6 +75,12 @@ class Interpreter {
             value = this.evaluate(stmt.initializer);
         }
         this.environment.define(stmt.name.lexeme, value);
+        return null;
+    }
+    visitWhileStmt(stmt) {
+        while (this.isTruthy(this.evaluate(stmt.condition))) {
+            this.execute(stmt.body);
+        }
         return null;
     }
     visitAssignExpr(expr) {

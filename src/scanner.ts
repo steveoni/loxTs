@@ -129,7 +129,7 @@ export default class Scanner {
 
   private addToken(type: TokenType, literal?: string | number): void {
     const text: string = this.source.substring(this.start, this.current)
-    if (literal) {
+    if (typeof literal === "number" || typeof literal === "string") {
       this.tokens.push(new Token(type, text, literal, this.line))
     }
     else {

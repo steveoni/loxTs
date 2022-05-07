@@ -63,7 +63,6 @@ class Lox {
         const statements = parser.parse();
         if (Lox.hadError)
             return;
-        console.log(statements);
         Lox.interpreter.interpret(statements);
     }
     // static error(line: number, message: string): void {

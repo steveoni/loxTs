@@ -123,7 +123,7 @@ class Scanner {
     }
     addToken(type, literal) {
         const text = this.source.substring(this.start, this.current);
-        if (literal) {
+        if (typeof literal === "number" || typeof literal === "string") {
             this.tokens.push(new tokens_1.Token(type, text, literal, this.line));
         }
         else {

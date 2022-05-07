@@ -13,6 +13,18 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     return expr.value
   }
 
+  public visitLogicalExpr(expr: Expr.LogicalExpr) {
+    const left: any = this.evaluate(expr.left)
+
+    if (expr.operator.type === TokenType.Or) {
+      if (this.isTruthy(left)) return left;
+    }
+    else {
+      if (!this.isTruthy(left)) return left
+    }
+    return this.evaluate(expr.right)
+  }
+
   public visitGroupingExpr(expr: Expr.GroupingExpr) {
     return this.evaluate(expr)
   }
@@ -50,6 +62,16 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     return null
   }
 
+  public visitIfStmt(stmt: Stmt.IfStmt) {
+    if (this.isTruthy(this.evaluate(stmt.condition))) {
+      this.execute(stmt.thenBranch)
+    } 
+    else if (stmt.thenBranch != null) {
+      this.execute(stmt.elseBranch)
+    }
+    return null;
+  }
+
   public visitPrintStmt(stmt: Stmt.PrintStmt) {
     const value = this.evaluate(stmt.expression)
     console.log(this.stringify(value))
@@ -63,6 +85,13 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     }
 
     this.environment.define(stmt.name.lexeme, value)
+    return null;
+  }
+
+  public visitWhileStmt(stmt: Stmt.WhileStmt) {
+    while (this.isTruthy(this.evaluate(stmt.condition))) {
+      this.execute(stmt.body)
+    }
     return null;
   }
 
