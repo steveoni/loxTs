@@ -1,4 +1,4 @@
-import Lox from "./lox"
+import Lox from "./Lox"
 
 function main() {
   const args = process.argv.slice(2)

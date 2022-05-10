@@ -63,6 +63,7 @@ class Lox {
         const statements = parser.parse();
         if (Lox.hadError)
             return;
+        console.log(statements[1]);
         Lox.interpreter.interpret(statements);
     }
     // static error(line: number, message: string): void {
@@ -95,4 +96,4 @@ exports.default = Lox;
 Lox.hadError = false;
 Lox.hadRuntimeError = false;
 Lox.interpreter = new Interpreter_1.default();
-//# sourceMappingURL=lox.js.map
+//# sourceMappingURL=Lox.js.map

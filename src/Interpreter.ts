@@ -1,14 +1,36 @@
 import * as Expr from './Expr';
-import { TokenType, Token } from './tokens'
+import { TokenType, Token } from './Tokens'
 import RuntimeError from './RuntimeError'
-import Lox from './lox';
+import Lox from './Lox';
 import * as Stmt from './Stmt'
 import Environment from './Environment'
-import { env } from 'process';
+import LoxCallable from './LoxCallable';
+import LoxFunction from './LoxFunction';
+import Return from './Return';
 
 export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void> {
-
+  readonly globals = new Environment()
   private environment = new Environment()
+
+  constructor() {
+    this.environment = this.globals
+    this.globals.define("clock",{
+
+      arity(): number {
+        return 0;
+      },
+
+      call(interpreter: Interpreter, argument: any[]): any {
+        const date = new Date()
+        return date.getMilliseconds() / 1000.0
+      },
+
+      toString(): string {
+        return "<native fn>"
+      }
+    } as LoxCallable)
+  }
+
   public visitLiteralExpr(expr: Expr.LiteralExpr) {
     return expr.value
   }
@@ -62,11 +84,18 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     return null
   }
 
+  public visitFunctionStmt(stmt: Stmt.FunctionStmt) {
+    const func = new LoxFunction(stmt, this.environment)
+    this.environment.define(stmt.name.lexeme, func)
+    return null;
+  }
+
   public visitIfStmt(stmt: Stmt.IfStmt) {
-    if (this.isTruthy(this.evaluate(stmt.condition))) {
+    const cond = this.evaluate(stmt.condition)
+    if (this.isTruthy(cond)) {
       this.execute(stmt.thenBranch)
     } 
-    else if (stmt.thenBranch != null) {
+    else if (stmt.elseBranch != null) {
       this.execute(stmt.elseBranch)
     }
     return null;
@@ -76,6 +105,13 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     const value = this.evaluate(stmt.expression)
     console.log(this.stringify(value))
     return null
+  }
+
+  public visitReturnStmt(stmt: Stmt.ReturnStmt) {
+    let value:any = null;
+    if (stmt.value !=null) value = this.evaluate(stmt.value)
+
+    throw new Return(value)
   }
 
   public visitVarStmt(stmt: Stmt.VarStmt) {
@@ -167,8 +203,28 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
       case TokenType.BangEqual:
         return !this.isEqual(left, right)
       case TokenType.EqualEqual:
-        return !this.isEqual(left, right)
+        return this.isEqual(left, right)
     }
+  }
+
+  public visitCallExpr(expr: Expr.CallExpr) {
+    const callee = this.evaluate(expr.callee)
+    const argumentss: any[] = []
+    for (const argument of expr.arguments) {
+      argumentss.push(this.evaluate(argument))
+    }
+
+    if (!("call" in callee)) {
+      throw new RuntimeError(expr.paren,
+        "Can only call functions and classes.")
+    }
+
+    const func = callee as LoxCallable
+    if (argumentss.length != func.arity()) {
+      throw new RuntimeError(expr.paren, 
+        `Expected ${func.arity()} arguments but got ${argumentss.length}`)
+    }
+    return func.call(this, argumentss)
   }
 
   private checkNumberOperands(operator: Token, left: any, right: any) {

@@ -11,6 +11,7 @@ class GenerateAst {
         GenerateAst.defineAst(outputDir, 'Expr', {
             Assign: "name: Token, value: Expr",
             Binary: "left: Expr, operator: Token, right: Expr",
+            Call: "callee: Expr, paren: Token, argument: Expr[]",
             Grouping: "expression: Expr",
             Literal: "value: string | number | boolean",
             Logical: "left: Expr, operator: Token, right: Expr",
@@ -20,8 +21,10 @@ class GenerateAst {
         GenerateAst.defineAst(outputDir, 'Stmt', {
             Block: "statements: Stmt[]",
             Expression: "expression: Expr",
+            Function: "name: Token, params: Token[], body: Stmt[]",
             If: "condition: Expr, thenBranch: Stmt, elseBranch: Stmt",
             Print: "expression: Expr ",
+            Return: "keyword: Token, value: Expr",
             Var: "name: Token, initializer: Expr",
             While: "condition: Expr, body: Stmt"
         });

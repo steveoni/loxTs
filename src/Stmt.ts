@@ -1,4 +1,4 @@
-import { Token } from "./tokens";
+import { Token } from "./Tokens";
 import { Expr } from "./Expr";
 
 
@@ -9,8 +9,10 @@ export interface Stmt {
 export interface Visitor<R> {
   visitBlockStmt ( expr: BlockStmt ): R
   visitExpressionStmt ( expr: ExpressionStmt ): R
+  visitFunctionStmt ( expr: FunctionStmt ): R
   visitIfStmt ( expr: IfStmt ): R
   visitPrintStmt ( expr: PrintStmt ): R
+  visitReturnStmt ( expr: ReturnStmt ): R
   visitVarStmt ( expr: VarStmt ): R
   visitWhileStmt ( expr: WhileStmt ): R
   }
@@ -37,6 +39,21 @@ export class ExpressionStmt implements Stmt {
   }
 }
 
+export class FunctionStmt implements Stmt {
+  name: Token
+  params: Token[]
+  body: Stmt[]
+  constructor ( name: Token, params: Token[], body: Stmt[] ) {
+    this.name = name;
+    this.params = params;
+    this.body = body;
+  }
+
+  accept<R>(visitor: Visitor<R>): R{
+    return visitor.visitFunctionStmt (this);
+  }
+}
+
 export class IfStmt implements Stmt {
   condition: Expr
   thenBranch: Stmt
@@ -60,6 +77,19 @@ export class PrintStmt implements Stmt {
 
   accept<R>(visitor: Visitor<R>): R{
     return visitor.visitPrintStmt (this);
+  }
+}
+
+export class ReturnStmt implements Stmt {
+  keyword: Token
+  value: Expr
+  constructor ( keyword: Token, value: Expr ) {
+    this.keyword = keyword;
+    this.value = value;
+  }
+
+  accept<R>(visitor: Visitor<R>): R{
+    return visitor.visitReturnStmt (this);
   }
 }
 

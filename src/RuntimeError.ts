@@ -1,4 +1,4 @@
-import { Token } from "./tokens"
+import { Token } from "./Tokens"
 
 export default class RuntimeError extends Error {
   readonly token: Token

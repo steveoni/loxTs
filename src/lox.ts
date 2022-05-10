@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs'
 import { createInterface } from "readline"
 import Scanner from './scanner'
-import { Token, TokenType } from './tokens'
+import { Token, TokenType } from './Tokens'
 import Parser from './Parser'
 import RuntimeError from './RuntimeError'
 import Interpreter from './Interpreter'
@@ -72,6 +72,7 @@ export default class Lox {
     const statements = parser.parse()
 
     if (Lox.hadError) return;
+    console.log(statements[1])
     Lox.interpreter.interpret(statements)
   }
 

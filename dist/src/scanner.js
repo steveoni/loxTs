@@ -20,7 +20,8 @@ const KEYWORDS = {
     this: tokens_1.TokenType.This,
     true: tokens_1.TokenType.True,
     var: tokens_1.TokenType.Var,
-    while: tokens_1.TokenType.While
+    while: tokens_1.TokenType.While,
+    return: tokens_1.TokenType.Return
 };
 class Scanner {
     constructor(source) {

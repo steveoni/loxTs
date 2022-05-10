@@ -5,11 +5,27 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const tokens_1 = require("./tokens");
 const RuntimeError_1 = __importDefault(require("./RuntimeError"));
-const lox_1 = __importDefault(require("./lox"));
+const Lox_1 = __importDefault(require("./Lox"));
 const Environment_1 = __importDefault(require("./Environment"));
+const LoxFunction_1 = __importDefault(require("./LoxFunction"));
+const Return_1 = __importDefault(require("./Return"));
 class Interpreter {
     constructor() {
+        this.globals = new Environment_1.default();
         this.environment = new Environment_1.default();
+        this.environment = this.globals;
+        this.globals.define("clock", {
+            arity() {
+                return 0;
+            },
+            call(interpreter, argument) {
+                const date = new Date();
+                return date.getMilliseconds() / 1000.0;
+            },
+            toString() {
+                return "<native fn>";
+            }
+        });
     }
     visitLiteralExpr(expr) {
         return expr.value;
@@ -55,11 +71,17 @@ class Interpreter {
         this.evaluate(stmt.expression);
         return null;
     }
+    visitFunctionStmt(stmt) {
+        const func = new LoxFunction_1.default(stmt, this.environment);
+        this.environment.define(stmt.name.lexeme, func);
+        return null;
+    }
     visitIfStmt(stmt) {
-        if (this.isTruthy(this.evaluate(stmt.condition))) {
+        const cond = this.evaluate(stmt.condition);
+        if (this.isTruthy(cond)) {
             this.execute(stmt.thenBranch);
         }
-        else if (stmt.thenBranch != null) {
+        else if (stmt.elseBranch != null) {
             this.execute(stmt.elseBranch);
         }
         return null;
@@ -68,6 +90,12 @@ class Interpreter {
         const value = this.evaluate(stmt.expression);
         console.log(this.stringify(value));
         return null;
+    }
+    visitReturnStmt(stmt) {
+        let value = null;
+        if (stmt.value != null)
+            value = this.evaluate(stmt.value);
+        throw new Return_1.default(value);
     }
     visitVarStmt(stmt) {
         let value = null;
@@ -149,8 +177,23 @@ class Interpreter {
             case tokens_1.TokenType.BangEqual:
                 return !this.isEqual(left, right);
             case tokens_1.TokenType.EqualEqual:
-                return !this.isEqual(left, right);
+                return this.isEqual(left, right);
         }
+    }
+    visitCallExpr(expr) {
+        const callee = this.evaluate(expr.callee);
+        const argumentss = [];
+        for (const argument of expr.arguments) {
+            argumentss.push(this.evaluate(argument));
+        }
+        if (!("call" in callee)) {
+            throw new RuntimeError_1.default(expr.paren, "Can only call functions and classes.");
+        }
+        const func = callee;
+        if (argumentss.length != func.arity()) {
+            throw new RuntimeError_1.default(expr.paren, `Expected ${func.arity()} arguments but got ${argumentss.length}`);
+        }
+        return func.call(this, argumentss);
     }
     checkNumberOperands(operator, left, right) {
         if (typeof left === "number" && typeof right === "number")
@@ -171,7 +214,7 @@ class Interpreter {
             }
         }
         catch (error) {
-            lox_1.default.runtimeError(error);
+            Lox_1.default.runtimeError(error);
         }
     }
     stringify(obj) {

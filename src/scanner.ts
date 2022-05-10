@@ -1,5 +1,5 @@
-import Lox from "./lox";
-import { TokenType, Token } from "./tokens";
+import Lox from "./Lox";
+import { TokenType, Token } from "./Tokens";
 
 
 
@@ -18,7 +18,8 @@ const KEYWORDS = {
   this:  TokenType.This,
   true:  TokenType.True,
   var:   TokenType.Var,
-  while: TokenType.While
+  while: TokenType.While,
+  return: TokenType.Return
 }
 
 

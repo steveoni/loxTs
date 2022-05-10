@@ -1,13 +1,15 @@
-import { TokenType, Token } from './tokens'
+import { TokenType, Token } from './Tokens'
 import * as Exprs from './Expr';
-import Lox from './lox';
+import Lox from './Lox';
 import { Stmt, 
          ExpressionStmt, 
          PrintStmt, 
          VarStmt, 
          BlockStmt,
          IfStmt,
-         WhileStmt } from './Stmt'
+         WhileStmt, 
+         FunctionStmt,
+         ReturnStmt} from './Stmt'
 
 export default class Parser {
   private readonly tokens: Token[]
@@ -31,6 +33,7 @@ export default class Parser {
 
   private declaration(): Stmt {
     try {
+      if (this.match(TokenType.Fun)) return this.function("function")
       if (this.match(TokenType.Var)) return this.varDeclaration()
       return this.statement()
     } catch (error) {
@@ -62,6 +65,7 @@ export default class Parser {
     if (this.match(TokenType.For)) return this.forStatement()
     if (this.match(TokenType.If)) return this.ifStatement()
     if (this.match(TokenType.Print)) return this.printStatement();
+    if (this.match(TokenType.Return)) return this.returnStatement();
     if (this.match(TokenType.While)) return this.whileStatement()
     if (this.match(TokenType.LeftBrace)) return new BlockStmt(this.block())
 
@@ -127,10 +131,40 @@ export default class Parser {
     return new PrintStmt(value)
   }
 
+  private returnStatement(): Stmt {
+    const keyword = this.previous()
+    let value: Exprs.Expr = null;
+    if (!this.check(TokenType.SemiColon)) {
+      value = this.expression();
+    }
+    this.consume(TokenType.SemiColon, "Expect ';' after return value.")
+    return new ReturnStmt(keyword, value)
+  }
+
   private expressionStatement(): Stmt {
     const value = this.expression()
     this.consume(TokenType.SemiColon, "Expect ';' after value.")
     return new ExpressionStmt(value)
+  }
+
+  private function (kind: string): FunctionStmt {
+    const name = this.consume(TokenType.Identifier, `Expect ${kind} name.`)
+    this.consume(TokenType.LeftParen, `Expect ( after ${kind} name.`)
+    const parameters: Token[] = []
+    if (!this.check(TokenType.RightParen)) {
+      do {
+        if (parameters.length >= 255 ) {
+          this.error(this.peek(), "Can't have more than 255 parameters.")
+        }
+        parameters.push(
+          this.consume(TokenType.Identifier, "Expect parameter name.")
+        )
+      } while (this.match(TokenType.Comma))
+    }
+    this.consume(TokenType.RightParen, "Expect ')' after parameters.")
+    this.consume(TokenType.LeftBrace, `Expect '{' before ${kind} body`)
+    const body = this.block()
+    return new FunctionStmt(name, parameters, body)
   }
 
   private block(): Stmt[] {
@@ -176,7 +210,6 @@ export default class Parser {
 
   private and(): Exprs.Expr {
     let expr = this.equality()
-
     while( this.match(TokenType.And)) {
       const operator = this.previous()
       const right = this.equality()
@@ -187,7 +220,6 @@ export default class Parser {
 
   private equality(): Exprs.Expr {
     let expr = this.comparison()
-
     while (this.match(TokenType.BangEqual, TokenType.EqualEqual)) {
       const operator = this.previous()
       const right = this.comparison()
@@ -231,7 +263,6 @@ export default class Parser {
 
   private comparison(): Exprs.Expr {
     let expr = this.term()
-
     while (this.match(TokenType.Greater, TokenType.GreaterEqual, TokenType.Less, TokenType.LessEqual)) {
       const operator = this.previous()
       const right = this.term()
@@ -242,7 +273,6 @@ export default class Parser {
 
   private term(): Exprs.Expr {
     let expr = this.factor()
-
     while (this.match(TokenType.Minus, TokenType.Plus)) {
       const operator = this.previous()
       const right = this.factor()
@@ -253,7 +283,6 @@ export default class Parser {
 
   private factor(): Exprs.Expr {
     let expr = this.unary()
-
     while (this.match(TokenType.Slash, TokenType.Star)) {
       const operator = this.previous()
       const right = this.unary()
@@ -268,7 +297,35 @@ export default class Parser {
       const right = this.unary()
       return new Exprs.UnaryExpr(operator, right)
     }
-    return this.primary()
+    return this.call()
+  }
+
+  private call(): Exprs.Expr {
+    let expr = this.primary()
+    while (true) {
+      if (this.match(TokenType.LeftParen)) {
+        expr = this.finishCall(expr)
+      } else {
+        break;
+      }
+    }
+    return expr;
+  }
+
+  private finishCall(callee: Exprs.Expr): Exprs.Expr {
+    const argument: Exprs.Expr[] = []
+    if (!this.check(TokenType.RightParen)) {
+      do {
+        if (argument.length >= 255) {
+          this.error(this.peek(), "Can't have more than 255 arguments")
+        }
+        argument.push(this.expression())
+      } while (this.match(TokenType.Comma))
+    }
+
+    const paren = this.consume(TokenType.RightParen,
+      "Expect ')' after arguments.")
+    return new Exprs.CallExpr(callee, paren, argument)
   }
 
   private primary(): Exprs.Expr {
@@ -305,7 +362,6 @@ export default class Parser {
 
   private synchronize() {
     this.advance()
-
     while (!this.isAtEnd()) {
       if (this.previous().type === TokenType.SemiColon) return;
 

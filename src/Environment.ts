@@ -1,5 +1,5 @@
 import RuntimeError from './RuntimeError'
-import { Token } from './tokens'
+import { Token } from './Tokens'
 
 export default class Environment {
   readonly enclosing: Environment
