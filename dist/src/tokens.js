@@ -59,4 +59,4 @@ class Token {
     }
 }
 exports.Token = Token;
-//# sourceMappingURL=tokens.js.map
+//# sourceMappingURL=Tokens.js.map

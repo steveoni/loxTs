@@ -6,9 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = require("fs");
 const readline_1 = require("readline");
 const scanner_1 = __importDefault(require("./scanner"));
-const tokens_1 = require("./tokens");
+const Tokens_1 = require("./Tokens");
 const Parser_1 = __importDefault(require("./Parser"));
 const Interpreter_1 = __importDefault(require("./Interpreter"));
+const Resolver_1 = __importDefault(require("./Resolver"));
 class Lox {
     constructor(args) {
         if (args.length > 0) {
@@ -63,7 +64,10 @@ class Lox {
         const statements = parser.parse();
         if (Lox.hadError)
             return;
-        console.log(statements[1]);
+        const resolver = new Resolver_1.default(Lox.interpreter);
+        resolver.resolve(statements);
+        if (Lox.hadError)
+            return;
         Lox.interpreter.interpret(statements);
     }
     // static error(line: number, message: string): void {
@@ -74,8 +78,8 @@ class Lox {
         Lox.hadError = true;
     }
     static error(token, message) {
-        if (token instanceof tokens_1.Token) {
-            if (token.type == tokens_1.TokenType.Eof) {
+        if (token instanceof Tokens_1.Token) {
+            if (token.type == Tokens_1.TokenType.Eof) {
                 this.report(token.line, " at end", message);
             }
             else {

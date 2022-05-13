@@ -5,6 +5,7 @@ import { Token, TokenType } from './Tokens'
 import Parser from './Parser'
 import RuntimeError from './RuntimeError'
 import Interpreter from './Interpreter'
+import Resolver from './Resolver'
 
 export default class Lox {
   static hadError = false
@@ -72,7 +73,10 @@ export default class Lox {
     const statements = parser.parse()
 
     if (Lox.hadError) return;
-    console.log(statements[1])
+    const resolver = new Resolver(Lox.interpreter)
+    resolver.resolve(statements)
+
+    if (Lox.hadError) return;
     Lox.interpreter.interpret(statements)
   }
 

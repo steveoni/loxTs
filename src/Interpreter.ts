@@ -11,6 +11,7 @@ import Return from './Return';
 export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void> {
   readonly globals = new Environment()
   private environment = new Environment()
+  private readonly locals = new Map<Expr.Expr, number>()
 
   constructor() {
     this.environment = this.globals
@@ -57,6 +58,10 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
 
   private execute(stmt: Stmt.Stmt) {
     stmt.accept(this)
+  }
+
+  public resolve(expr: Expr.Expr, depth: number) {
+    this.locals.set(expr, depth);
   }
 
   executeBlock(statements: Stmt.Stmt[], environment: Environment ) {
@@ -131,9 +136,15 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     return null;
   }
 
-  public visitAssignExpr(expr: Expr.AssignExpr) {
+  public visitAssignExpr(expr: Expr.AssignExpr): any{
     const value = this.evaluate(expr.value)
-    this.environment.assign(expr.name, value)
+    const distance = this.locals.get(expr)
+    if (distance !== null) {
+      this.environment.assignAt(distance, expr.name, value)
+    } else {
+      this.globals.assign(expr.name, value)
+    }
+    return value;
   }
 
   public visitUnaryExpr(expr: Expr.UnaryExpr) {
@@ -150,7 +161,16 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
   }
 
   public visitVariableExpr(expr: Expr.VariableExpr) {
-    return this.environment.get(expr.name)
+    return this.lookUpVariable(expr.name, expr)
+  }
+
+  private lookUpVariable(name: Token, expr: Expr.Expr) {
+    const distance: number = this.locals.get(expr)
+    if (distance != null) {
+      return this.environment.getAt(distance, name.lexeme)
+    } else {
+      return this.globals.get(name)
+    }
   }
 
   private checkNumberOperand(operator: Token, operand: any) {

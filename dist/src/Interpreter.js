@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const tokens_1 = require("./tokens");
+const Tokens_1 = require("./Tokens");
 const RuntimeError_1 = __importDefault(require("./RuntimeError"));
 const Lox_1 = __importDefault(require("./Lox"));
 const Environment_1 = __importDefault(require("./Environment"));
@@ -13,6 +13,7 @@ class Interpreter {
     constructor() {
         this.globals = new Environment_1.default();
         this.environment = new Environment_1.default();
+        this.locals = new Map();
         this.environment = this.globals;
         this.globals.define("clock", {
             arity() {
@@ -32,7 +33,7 @@ class Interpreter {
     }
     visitLogicalExpr(expr) {
         const left = this.evaluate(expr.left);
-        if (expr.operator.type === tokens_1.TokenType.Or) {
+        if (expr.operator.type === Tokens_1.TokenType.Or) {
             if (this.isTruthy(left))
                 return left;
         }
@@ -50,6 +51,9 @@ class Interpreter {
     }
     execute(stmt) {
         stmt.accept(this);
+    }
+    resolve(expr, depth) {
+        this.locals.set(expr, depth);
     }
     executeBlock(statements, environment) {
         const previous = this.environment;
@@ -113,21 +117,41 @@ class Interpreter {
     }
     visitAssignExpr(expr) {
         const value = this.evaluate(expr.value);
-        this.environment.assign(expr.name, value);
+        const distance = this.locals.get(expr);
+        if (distance !== null) {
+            this.environment.assignAt(distance, expr.name, value);
+        }
+        else {
+            this.globals.assign(expr.name, value);
+        }
+        return value;
     }
     visitUnaryExpr(expr) {
         const right = this.evaluate(expr.right);
         switch (expr.operator.type) {
-            case tokens_1.TokenType.Minus:
+            case Tokens_1.TokenType.Minus:
                 this.checkNumberOperand(expr.operator, right);
                 return -right;
                 break;
-            case tokens_1.TokenType.Bang:
+            case Tokens_1.TokenType.Bang:
                 return !this.isTruthy(right);
         }
     }
     visitVariableExpr(expr) {
-        return this.environment.get(expr.name);
+        return this.lookUpVariable(expr.name, expr);
+    }
+    lookUpVariable(name, expr) {
+        const distance = this.locals.get(expr);
+        if (distance != null) {
+            console.log("distance", distance, name);
+            console.log(this.environment);
+            return this.environment.getAt(distance, name.lexeme);
+        }
+        else {
+            console.log("global", name);
+            console.log(this.globals);
+            return this.globals.get(name);
+        }
     }
     checkNumberOperand(operator, operand) {
         if (typeof operand === "number")
@@ -145,16 +169,16 @@ class Interpreter {
         const left = this.evaluate(expr.left);
         const right = this.evaluate(expr.right);
         switch (expr.operator.type) {
-            case tokens_1.TokenType.Minus:
+            case Tokens_1.TokenType.Minus:
                 this.checkNumberOperands(expr.operator, left, right);
                 return left - right;
-            case tokens_1.TokenType.Slash:
+            case Tokens_1.TokenType.Slash:
                 this.checkNumberOperands(expr.operator, left, right);
                 return left / right;
-            case tokens_1.TokenType.Star:
+            case Tokens_1.TokenType.Star:
                 this.checkNumberOperands(expr.operator, left, right);
                 return left * right;
-            case tokens_1.TokenType.Plus:
+            case Tokens_1.TokenType.Plus:
                 if (typeof left === "number" && typeof right === "number") {
                     return left + right;
                 }
@@ -162,21 +186,21 @@ class Interpreter {
                     return left + right;
                 }
                 throw new RuntimeError_1.default(expr.operator, "Operands must be two numbers or two strings.");
-            case tokens_1.TokenType.Greater:
+            case Tokens_1.TokenType.Greater:
                 this.checkNumberOperands(expr.operator, left, right);
                 return left > right;
-            case tokens_1.TokenType.GreaterEqual:
+            case Tokens_1.TokenType.GreaterEqual:
                 this.checkNumberOperands(expr.operator, left, right);
                 return left >= right;
-            case tokens_1.TokenType.Less:
+            case Tokens_1.TokenType.Less:
                 this.checkNumberOperands(expr.operator, left, right);
                 return left < right;
-            case tokens_1.TokenType.LessEqual:
+            case Tokens_1.TokenType.LessEqual:
                 this.checkNumberOperands(expr.operator, left, right);
                 return left <= right;
-            case tokens_1.TokenType.BangEqual:
+            case Tokens_1.TokenType.BangEqual:
                 return !this.isEqual(left, right);
-            case tokens_1.TokenType.EqualEqual:
+            case Tokens_1.TokenType.EqualEqual:
                 return this.isEqual(left, right);
         }
     }

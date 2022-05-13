@@ -3,25 +3,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const lox_1 = __importDefault(require("./lox"));
-const tokens_1 = require("./tokens");
+const Lox_1 = __importDefault(require("./Lox"));
+const Tokens_1 = require("./Tokens");
 const KEYWORDS = {
-    and: tokens_1.TokenType.And,
-    class: tokens_1.TokenType.Class,
-    else: tokens_1.TokenType.Else,
-    false: tokens_1.TokenType.False,
-    for: tokens_1.TokenType.For,
-    fun: tokens_1.TokenType.Fun,
-    if: tokens_1.TokenType.If,
-    nil: tokens_1.TokenType.Nil,
-    or: tokens_1.TokenType.Or,
-    print: tokens_1.TokenType.Print,
-    super: tokens_1.TokenType.Super,
-    this: tokens_1.TokenType.This,
-    true: tokens_1.TokenType.True,
-    var: tokens_1.TokenType.Var,
-    while: tokens_1.TokenType.While,
-    return: tokens_1.TokenType.Return
+    and: Tokens_1.TokenType.And,
+    class: Tokens_1.TokenType.Class,
+    else: Tokens_1.TokenType.Else,
+    false: Tokens_1.TokenType.False,
+    for: Tokens_1.TokenType.For,
+    fun: Tokens_1.TokenType.Fun,
+    if: Tokens_1.TokenType.If,
+    nil: Tokens_1.TokenType.Nil,
+    or: Tokens_1.TokenType.Or,
+    print: Tokens_1.TokenType.Print,
+    super: Tokens_1.TokenType.Super,
+    this: Tokens_1.TokenType.This,
+    true: Tokens_1.TokenType.True,
+    var: Tokens_1.TokenType.Var,
+    while: Tokens_1.TokenType.While,
+    return: Tokens_1.TokenType.Return
 };
 class Scanner {
     constructor(source) {
@@ -36,7 +36,7 @@ class Scanner {
             this.start = this.current;
             this.scanToken();
         }
-        this.tokens.push(new tokens_1.Token(tokens_1.TokenType.Eof, "", null, this.line));
+        this.tokens.push(new Tokens_1.Token(Tokens_1.TokenType.Eof, "", null, this.line));
         return this.tokens;
     }
     isAtEnd() {
@@ -46,46 +46,46 @@ class Scanner {
         const c = this.advance();
         switch (c) {
             case "(":
-                this.addToken(tokens_1.TokenType.LeftParen);
+                this.addToken(Tokens_1.TokenType.LeftParen);
                 break;
             case ")":
-                this.addToken(tokens_1.TokenType.RightParen);
+                this.addToken(Tokens_1.TokenType.RightParen);
                 break;
             case "{":
-                this.addToken(tokens_1.TokenType.LeftBrace);
+                this.addToken(Tokens_1.TokenType.LeftBrace);
                 break;
             case "}":
-                this.addToken(tokens_1.TokenType.RightBrace);
+                this.addToken(Tokens_1.TokenType.RightBrace);
                 break;
             case ',':
-                this.addToken(tokens_1.TokenType.Comma);
+                this.addToken(Tokens_1.TokenType.Comma);
                 break;
             case ".":
-                this.addToken(tokens_1.TokenType.Dot);
+                this.addToken(Tokens_1.TokenType.Dot);
                 break;
             case '-':
-                this.addToken(tokens_1.TokenType.Minus);
+                this.addToken(Tokens_1.TokenType.Minus);
                 break;
             case '+':
-                this.addToken(tokens_1.TokenType.Plus);
+                this.addToken(Tokens_1.TokenType.Plus);
                 break;
             case ';':
-                this.addToken(tokens_1.TokenType.SemiColon);
+                this.addToken(Tokens_1.TokenType.SemiColon);
                 break;
             case '*':
-                this.addToken(tokens_1.TokenType.Star);
+                this.addToken(Tokens_1.TokenType.Star);
                 break;
             case '!':
-                this.addToken(this.match("=") ? tokens_1.TokenType.BangEqual : tokens_1.TokenType.Bang);
+                this.addToken(this.match("=") ? Tokens_1.TokenType.BangEqual : Tokens_1.TokenType.Bang);
                 break;
             case '=':
-                this.addToken(this.match("=") ? tokens_1.TokenType.EqualEqual : tokens_1.TokenType.Equal);
+                this.addToken(this.match("=") ? Tokens_1.TokenType.EqualEqual : Tokens_1.TokenType.Equal);
                 break;
             case '<':
-                this.addToken(this.match("=") ? tokens_1.TokenType.LessEqual : tokens_1.TokenType.Less);
+                this.addToken(this.match("=") ? Tokens_1.TokenType.LessEqual : Tokens_1.TokenType.Less);
                 break;
             case '>':
-                this.addToken(this.match("=") ? tokens_1.TokenType.GreaterEqual : tokens_1.TokenType.Greater);
+                this.addToken(this.match("=") ? Tokens_1.TokenType.GreaterEqual : Tokens_1.TokenType.Greater);
                 break;
             case '/':
                 if (this.match('/')) {
@@ -93,7 +93,7 @@ class Scanner {
                         this.advance();
                 }
                 else {
-                    this.addToken(tokens_1.TokenType.Slash);
+                    this.addToken(Tokens_1.TokenType.Slash);
                 }
                 break;
             case ' ':
@@ -114,7 +114,7 @@ class Scanner {
                     this.identifier();
                 }
                 else {
-                    lox_1.default.error(this.line, "Unexpected character.");
+                    Lox_1.default.error(this.line, "Unexpected character.");
                 }
                 break;
         }
@@ -125,10 +125,10 @@ class Scanner {
     addToken(type, literal) {
         const text = this.source.substring(this.start, this.current);
         if (typeof literal === "number" || typeof literal === "string") {
-            this.tokens.push(new tokens_1.Token(type, text, literal, this.line));
+            this.tokens.push(new Tokens_1.Token(type, text, literal, this.line));
         }
         else {
-            this.tokens.push(new tokens_1.Token(type, text, null, this.line));
+            this.tokens.push(new Tokens_1.Token(type, text, null, this.line));
         }
     }
     match(expected) {
@@ -151,12 +151,12 @@ class Scanner {
             this.advance();
         }
         if (this.isAtEnd()) {
-            lox_1.default.error(this.line, "Unterminated string");
+            Lox_1.default.error(this.line, "Unterminated string");
             return;
         }
         this.advance();
         const value = this.source.substring(this.start + 1, this.current - 1);
-        this.addToken(tokens_1.TokenType.String, value);
+        this.addToken(Tokens_1.TokenType.String, value);
     }
     isDigit(c) {
         return c >= '0' && c <= '9';
@@ -170,7 +170,7 @@ class Scanner {
             while (this.isDigit(this.peek()))
                 this.advance();
         }
-        this.addToken(tokens_1.TokenType.Number, parseFloat(this.source.substring(this.start, this.current)));
+        this.addToken(Tokens_1.TokenType.Number, parseFloat(this.source.substring(this.start, this.current)));
     }
     peekNext() {
         if (this.current + 1 >= this.source.length)
@@ -183,7 +183,7 @@ class Scanner {
         const text = this.source.substring(this.start, this.current);
         let types = KEYWORDS[text];
         if (types == null)
-            types = tokens_1.TokenType.Identifier;
+            types = Tokens_1.TokenType.Identifier;
         this.addToken(types);
     }
     isAlpha(c) {

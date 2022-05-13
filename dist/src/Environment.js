@@ -12,6 +12,19 @@ class Environment {
     define(name, value) {
         this.values.set(name, value);
     }
+    ancestor(distance) {
+        let enviroment = this;
+        for (let i = 0; i < distance; i++) {
+            enviroment = enviroment.enclosing;
+        }
+        return enviroment;
+    }
+    getAt(distance, name) {
+        return this.ancestor(distance).values.get(name);
+    }
+    assignAt(distance, name, value) {
+        this.ancestor(distance).values.set(name.lexeme, value);
+    }
     get(name) {
         if (this.values.has(name.lexeme)) {
             return this.values.get(name.lexeme);
