@@ -26,6 +26,12 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
     this.endScope()
   }
 
+  public visitClassStmt(stmt: Stmt.ClassStmt) {
+    this.declare(stmt.name)
+    this.define(stmt.name);
+    return null;
+  }
+
   public resolve (statements: Stmt.Stmt[]) { 
     if (statements) {
       for (let statement of statements) {
@@ -160,9 +166,14 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
 
   public visitCallExpr(expr: Expr.CallExpr) {
     this.resolveExpr(expr.callee)
-    for (const argument of expr.arguments) {
+    for (const argument of expr.argument) {
       this.resolveExpr(argument)
     }
+    return null;
+  }
+
+  public visitGetExpr(expr: Expr.GetExpr) {
+    this.resolveExpr(expr.obj)
     return null;
   }
 
@@ -178,6 +189,12 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
   public visitLogicalExpr(expr: Expr.LogicalExpr) {
     this.resolveExpr(expr.left)
     this.resolveExpr(expr.right)
+    return null;
+  }
+
+  public visitSetExpr(expr: Expr.SetExpr) {
+    this.resolveExpr(expr.value)
+    this.resolveExpr(expr.obj)
     return null;
   }
 

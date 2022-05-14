@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WhileStmt = exports.VarStmt = exports.ReturnStmt = exports.PrintStmt = exports.IfStmt = exports.FunctionStmt = exports.ExpressionStmt = exports.BlockStmt = void 0;
+exports.WhileStmt = exports.VarStmt = exports.ReturnStmt = exports.PrintStmt = exports.IfStmt = exports.FunctionStmt = exports.ExpressionStmt = exports.ClassStmt = exports.BlockStmt = void 0;
 class BlockStmt {
     constructor(statements) {
         this.statements = statements;
@@ -10,6 +10,16 @@ class BlockStmt {
     }
 }
 exports.BlockStmt = BlockStmt;
+class ClassStmt {
+    constructor(name, methods) {
+        this.name = name;
+        this.methods = methods;
+    }
+    accept(visitor) {
+        return visitor.visitClassStmt(this);
+    }
+}
+exports.ClassStmt = ClassStmt;
 class ExpressionStmt {
     constructor(expression) {
         this.expression = expression;

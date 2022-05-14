@@ -9,6 +9,8 @@ const Lox_1 = __importDefault(require("./Lox"));
 const Environment_1 = __importDefault(require("./Environment"));
 const LoxFunction_1 = __importDefault(require("./LoxFunction"));
 const Return_1 = __importDefault(require("./Return"));
+const LoxClass_1 = __importDefault(require("./LoxClass"));
+const LoxInstance_1 = __importDefault(require("./LoxInstance"));
 class Interpreter {
     constructor() {
         this.globals = new Environment_1.default();
@@ -69,6 +71,12 @@ class Interpreter {
     }
     visitBlockStmt(stmt) {
         this.executeBlock(stmt.statements, new Environment_1.default(this.environment));
+        return null;
+    }
+    visitClassStmt(stmt) {
+        this.environment.define(stmt.name.lexeme, null);
+        const klass = new LoxClass_1.default(stmt.name.lexeme);
+        this.environment.assign(stmt.name, klass);
         return null;
     }
     visitExpressionStmt(stmt) {
@@ -143,13 +151,9 @@ class Interpreter {
     lookUpVariable(name, expr) {
         const distance = this.locals.get(expr);
         if (distance != null) {
-            console.log("distance", distance, name);
-            console.log(this.environment);
             return this.environment.getAt(distance, name.lexeme);
         }
         else {
-            console.log("global", name);
-            console.log(this.globals);
             return this.globals.get(name);
         }
     }
@@ -207,7 +211,7 @@ class Interpreter {
     visitCallExpr(expr) {
         const callee = this.evaluate(expr.callee);
         const argumentss = [];
-        for (const argument of expr.arguments) {
+        for (const argument of expr.argument) {
             argumentss.push(this.evaluate(argument));
         }
         if (!("call" in callee)) {
@@ -218,6 +222,13 @@ class Interpreter {
             throw new RuntimeError_1.default(expr.paren, `Expected ${func.arity()} arguments but got ${argumentss.length}`);
         }
         return func.call(this, argumentss);
+    }
+    visitGetExpr(expr) {
+        const obj = this.evaluate(expr.obj);
+        if (obj instanceof LoxInstance_1.default) {
+            return obj.get(expr.name);
+        }
+        throw new RuntimeError_1.default(expr.name, "Only instances have properties.");
     }
     checkNumberOperands(operator, left, right) {
         if (typeof left === "number" && typeof right === "number")

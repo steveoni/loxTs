@@ -22,6 +22,11 @@ class Resolver {
         this.resolve(stmt.statements);
         this.endScope();
     }
+    visitClassStmt(stmt) {
+        this.declare(stmt.name);
+        this.define(stmt.name);
+        return null;
+    }
     resolve(statements) {
         if (statements) {
             for (let statement of statements) {
@@ -138,9 +143,13 @@ class Resolver {
     }
     visitCallExpr(expr) {
         this.resolveExpr(expr.callee);
-        for (const argument of expr.arguments) {
+        for (const argument of expr.argument) {
             this.resolveExpr(argument);
         }
+        return null;
+    }
+    visitGetExpr(expr) {
+        this.resolveExpr(expr.obj);
         return null;
     }
     visitGroupingExpr(expr) {

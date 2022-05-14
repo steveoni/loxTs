@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.VariableExpr = exports.UnaryExpr = exports.LogicalExpr = exports.LiteralExpr = exports.GroupingExpr = exports.CallExpr = exports.BinaryExpr = exports.AssignExpr = void 0;
+exports.VariableExpr = exports.UnaryExpr = exports.LogicalExpr = exports.LiteralExpr = exports.GroupingExpr = exports.GetExpr = exports.CallExpr = exports.BinaryExpr = exports.AssignExpr = void 0;
 class AssignExpr {
     constructor(name, value) {
         this.name = name;
@@ -26,13 +26,23 @@ class CallExpr {
     constructor(callee, paren, argument) {
         this.callee = callee;
         this.paren = paren;
-        this.arguments = argument;
+        this.argument = argument;
     }
     accept(visitor) {
         return visitor.visitCallExpr(this);
     }
 }
 exports.CallExpr = CallExpr;
+class GetExpr {
+    constructor(obj, name) {
+        this.obj = obj;
+        this.name = name;
+    }
+    accept(visitor) {
+        return visitor.visitGetExpr(this);
+    }
+}
+exports.GetExpr = GetExpr;
 class GroupingExpr {
     constructor(expression) {
         this.expression = expression;

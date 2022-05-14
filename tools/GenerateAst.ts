@@ -11,15 +11,18 @@ export default class GenerateAst {
       Assign: "name: Token, value: Expr",
       Binary: "left: Expr, operator: Token, right: Expr",
       Call: "callee: Expr, paren: Token, argument: Expr[]",
+      Get: "obj: Expr, name: Token",
       Grouping: "expression: Expr",
       Literal: "value: string | number | boolean",
       Logical: "left: Expr, operator: Token, right: Expr",
       Unary: "operator: Token, right: Expr",
+      Set: "obj: Expr, name: Token, value: Expr",
       Variable: "name: Token"
     });
 
     GenerateAst.defineAst(outputDir, 'Stmt', {
       Block: "statements: Stmt[]",
+      Class: "name: Token, methods: FunctionStmt[]",
       Expression: "expression: Expr",
       Function: "name: Token, params: Token[], body: Stmt[]",
       If: "condition: Expr, thenBranch: Stmt, elseBranch: Stmt",

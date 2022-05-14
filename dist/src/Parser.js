@@ -43,6 +43,8 @@ class Parser {
     }
     declaration() {
         try {
+            if (this.match(Tokens_1.TokenType.Class))
+                return this.classDeclaration();
             if (this.match(Tokens_1.TokenType.Fun))
                 return this.function("function");
             if (this.match(Tokens_1.TokenType.Var))
@@ -53,6 +55,16 @@ class Parser {
             this.synchronize();
             return null;
         }
+    }
+    classDeclaration() {
+        const name = this.consume(Tokens_1.TokenType.Identifier, "Expect class name");
+        this.consume(Tokens_1.TokenType.LeftBrace, "Expect '{' before class body.");
+        const methods = [];
+        while (!this.check(Tokens_1.TokenType.RightBrace) && !this.isAtEnd()) {
+            methods.push(this.function("method"));
+        }
+        this.consume(Tokens_1.TokenType.RightBrace, "Expect '}' after class body.");
+        return new Stmt_1.ClassStmt(name, methods);
     }
     varDeclaration() {
         const name = this.consume(Tokens_1.TokenType.Identifier, "Expect variable name.");
@@ -285,6 +297,10 @@ class Parser {
         while (true) {
             if (this.match(Tokens_1.TokenType.LeftParen)) {
                 expr = this.finishCall(expr);
+            }
+            else if (this.match(Tokens_1.TokenType.Dot)) {
+                const name = this.consume(Tokens_1.TokenType.Identifier, "Expect property name after '.' .");
+                expr = new Exprs.GetExpr(expr, name);
             }
             else {
                 break;

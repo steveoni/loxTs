@@ -7,6 +7,8 @@ import Environment from './Environment'
 import LoxCallable from './LoxCallable';
 import LoxFunction from './LoxFunction';
 import Return from './Return';
+import LoxClass from './LoxClass';
+import LoxInstance from './LoxInstance';
 
 export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void> {
   readonly globals = new Environment()
@@ -48,6 +50,19 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     return this.evaluate(expr.right)
   }
 
+  public visitSetExpr(expr: Expr.SetExpr) {
+    let obj = this.evaluate(expr.obj)
+    if (!(obj instanceof LoxInstance)) {
+      throw new RuntimeError(expr.name,
+        "Only instances have fields.")
+    }
+
+    const value = this.evaluate(expr.value)
+    obj = obj as LoxInstance
+    obj.set(expr.name, value)
+    return value;
+  }
+
   public visitGroupingExpr(expr: Expr.GroupingExpr) {
     return this.evaluate(expr)
   }
@@ -81,6 +96,13 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
 
   public visitBlockStmt(stmt: Stmt.BlockStmt) {
     this.executeBlock(stmt.statements, new Environment(this.environment))
+    return null;
+  }
+
+  public visitClassStmt(stmt: Stmt.ClassStmt) {
+    this.environment.define(stmt.name.lexeme, null)
+    const klass = new LoxClass(stmt.name.lexeme)
+    this.environment.assign(stmt.name, klass)
     return null;
   }
 
@@ -230,7 +252,7 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
   public visitCallExpr(expr: Expr.CallExpr) {
     const callee = this.evaluate(expr.callee)
     const argumentss: any[] = []
-    for (const argument of expr.arguments) {
+    for (const argument of expr.argument) {
       argumentss.push(this.evaluate(argument))
     }
 
@@ -245,6 +267,17 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
         `Expected ${func.arity()} arguments but got ${argumentss.length}`)
     }
     return func.call(this, argumentss)
+  }
+
+
+  public visitGetExpr(expr: Expr.GetExpr): any {
+    const obj = this.evaluate(expr.obj)
+    if (obj instanceof LoxInstance) {
+      return (obj as LoxInstance).get(expr.name)
+    }
+
+    throw new RuntimeError(expr.name,
+      "Only instances have properties.");
   }
 
   private checkNumberOperands(operator: Token, left: any, right: any) {

@@ -9,7 +9,8 @@ import { Stmt,
          IfStmt,
          WhileStmt, 
          FunctionStmt,
-         ReturnStmt} from './Stmt'
+         ReturnStmt,
+         ClassStmt} from './Stmt'
 
 export default class Parser {
   private readonly tokens: Token[]
@@ -33,6 +34,7 @@ export default class Parser {
 
   private declaration(): Stmt {
     try {
+      if (this.match(TokenType.Class)) return this.classDeclaration()
       if (this.match(TokenType.Fun)) return this.function("function")
       if (this.match(TokenType.Var)) return this.varDeclaration()
       return this.statement()
@@ -40,6 +42,17 @@ export default class Parser {
       this.synchronize()
       return null;
     }
+  }
+
+  private classDeclaration(): Stmt {
+    const name = this.consume(TokenType.Identifier, "Expect class name")
+    this.consume(TokenType.LeftBrace, "Expect '{' before class body.")
+    const methods: FunctionStmt[] = [];
+    while (!this.check(TokenType.RightBrace) && !this.isAtEnd()) {
+      methods.push(this.function("method"))
+    }
+    this.consume(TokenType.RightBrace, "Expect '}' after class body.")
+    return new ClassStmt(name, methods)
   }
 
   private varDeclaration(): Stmt {
@@ -188,6 +201,10 @@ export default class Parser {
       if (expr instanceof Exprs.VariableExpr ) {
         const name = (expr as Exprs.VariableExpr).name
         return new Exprs.AssignExpr(name, value)
+      } 
+      else if ( expr instanceof Exprs.GetExpr) {
+        const get = expr as Exprs.GetExpr
+        return new Exprs.SetExpr(get.obj, get.name, value)
       }
 
       this.error(equals, "Invalid assignment target.")
@@ -305,7 +322,12 @@ export default class Parser {
     while (true) {
       if (this.match(TokenType.LeftParen)) {
         expr = this.finishCall(expr)
-      } else {
+      } else if (this.match(TokenType.Dot)) {
+        const name = this.consume(TokenType.Identifier,
+          "Expect property name after '.' .")
+          expr = new Exprs.GetExpr(expr, name)  
+      } 
+      else {
         break;
       }
     }

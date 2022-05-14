@@ -1,4 +1,4 @@
-import { Token } from "./Tokens";
+import { Token } from "./tokens";
 import { Expr } from "./Expr";
 
 
@@ -8,6 +8,7 @@ export interface Stmt {
 
 export interface Visitor<R> {
   visitBlockStmt ( expr: BlockStmt ): R
+  visitClassStmt ( expr: ClassStmt ): R
   visitExpressionStmt ( expr: ExpressionStmt ): R
   visitFunctionStmt ( expr: FunctionStmt ): R
   visitIfStmt ( expr: IfStmt ): R
@@ -25,6 +26,19 @@ export class BlockStmt implements Stmt {
 
   accept<R>(visitor: Visitor<R>): R{
     return visitor.visitBlockStmt (this);
+  }
+}
+
+export class ClassStmt implements Stmt {
+  name: Token
+  methods: FunctionStmt[]
+  constructor ( name: Token, methods: FunctionStmt[] ) {
+    this.name = name;
+    this.methods = methods;
+  }
+
+  accept<R>(visitor: Visitor<R>): R{
+    return visitor.visitClassStmt (this);
   }
 }
 

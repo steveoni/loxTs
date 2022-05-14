@@ -1,4 +1,4 @@
-import { Token } from "./Tokens";
+import { Token } from "./tokens";
 
 
 export interface Expr {
@@ -9,10 +9,12 @@ export interface Visitor<R> {
   visitAssignExpr ( expr: AssignExpr ): R
   visitBinaryExpr ( expr: BinaryExpr ): R
   visitCallExpr ( expr: CallExpr ): R
+  visitGetExpr ( expr: GetExpr ): R
   visitGroupingExpr ( expr: GroupingExpr ): R
   visitLiteralExpr ( expr: LiteralExpr ): R
   visitLogicalExpr ( expr: LogicalExpr ): R
   visitUnaryExpr ( expr: UnaryExpr ): R
+  visitSetExpr ( expr: SetExpr ): R
   visitVariableExpr ( expr: VariableExpr ): R
   }
 
@@ -47,15 +49,28 @@ export class BinaryExpr implements Expr {
 export class CallExpr implements Expr {
   callee: Expr
   paren: Token
-  arguments: Expr[]
+  argument: Expr[]
   constructor ( callee: Expr, paren: Token, argument: Expr[] ) {
     this.callee = callee;
     this.paren = paren;
-    this.arguments = argument;
+    this.argument = argument;
   }
 
   accept<R>(visitor: Visitor<R>): R{
     return visitor.visitCallExpr (this);
+  }
+}
+
+export class GetExpr implements Expr {
+  obj: Expr
+  name: Token
+  constructor ( obj: Expr, name: Token ) {
+    this.obj = obj;
+    this.name = name;
+  }
+
+  accept<R>(visitor: Visitor<R>): R{
+    return visitor.visitGetExpr (this);
   }
 }
 
@@ -106,6 +121,21 @@ export class UnaryExpr implements Expr {
 
   accept<R>(visitor: Visitor<R>): R{
     return visitor.visitUnaryExpr (this);
+  }
+}
+
+export class SetExpr implements Expr {
+  obj: Expr
+  name: Token
+  value: Expr
+  constructor ( obj: Expr, name: Token, value: Expr ) {
+    this.obj = obj;
+    this.name = name;
+    this.value = value;
+  }
+
+  accept<R>(visitor: Visitor<R>): R{
+    return visitor.visitSetExpr (this);
   }
 }
 
