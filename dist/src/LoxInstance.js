@@ -6,14 +6,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const RuntimeError_1 = __importDefault(require("./RuntimeError"));
 class LoxInstance {
     constructor(klass) {
-        this.field = new Map();
+        this.fields = new Map();
         this.klass = klass;
     }
     get(name) {
-        if (this.field.has(name.lexeme)) {
-            return this.field.get(name.lexeme);
+        if (this.fields.has(name.lexeme)) {
+            return this.fields.get(name.lexeme);
         }
+        const method = this.klass.findMethod(name.lexeme);
+        if (method !== null)
+            return method.bind(this);
         throw new RuntimeError_1.default(name, `Undefined property ${name.lexeme}.`);
+    }
+    set(name, value) {
+        this.fields.set(name.lexeme, value);
     }
     toString() {
         return `${this.klass.name} instance`;

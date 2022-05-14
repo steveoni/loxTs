@@ -198,6 +198,10 @@ class Parser {
                 const name = expr.name;
                 return new Exprs.AssignExpr(name, value);
             }
+            else if (expr instanceof Exprs.GetExpr) {
+                const get = expr;
+                return new Exprs.SetExpr(get.obj, get.name, value);
+            }
             this.error(equals, "Invalid assignment target.");
         }
         return expr;
@@ -331,6 +335,8 @@ class Parser {
         if (this.match(Tokens_1.TokenType.Number, Tokens_1.TokenType.String)) {
             return new Exprs.LiteralExpr(this.previous().literal);
         }
+        if (this.match(Tokens_1.TokenType.This))
+            return new Exprs.ThisExpr(this.previous());
         if (this.match(Tokens_1.TokenType.Identifier)) {
             return new Exprs.VariableExpr(this.previous());
         }

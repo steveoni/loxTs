@@ -45,6 +45,19 @@ class Interpreter {
         }
         return this.evaluate(expr.right);
     }
+    visitSetExpr(expr) {
+        let obj = this.evaluate(expr.obj);
+        if (!(obj instanceof LoxInstance_1.default)) {
+            throw new RuntimeError_1.default(expr.name, "Only instances have fields.");
+        }
+        const value = this.evaluate(expr.value);
+        obj = obj;
+        obj.set(expr.name, value);
+        return value;
+    }
+    visitThisExpr(expr) {
+        return this.lookUpVariable(expr.keyword, expr);
+    }
     visitGroupingExpr(expr) {
         return this.evaluate(expr);
     }
@@ -75,7 +88,12 @@ class Interpreter {
     }
     visitClassStmt(stmt) {
         this.environment.define(stmt.name.lexeme, null);
-        const klass = new LoxClass_1.default(stmt.name.lexeme);
+        const methods = new Map();
+        for (const method of stmt.methods) {
+            const func = new LoxFunction_1.default(method, this.environment, (method.name.lexeme === "init"));
+            methods.set(method.name.lexeme, func);
+        }
+        const klass = new LoxClass_1.default(stmt.name.lexeme, methods);
         this.environment.assign(stmt.name, klass);
         return null;
     }
@@ -84,7 +102,7 @@ class Interpreter {
         return null;
     }
     visitFunctionStmt(stmt) {
-        const func = new LoxFunction_1.default(stmt, this.environment);
+        const func = new LoxFunction_1.default(stmt, this.environment, false);
         this.environment.define(stmt.name.lexeme, func);
         return null;
     }

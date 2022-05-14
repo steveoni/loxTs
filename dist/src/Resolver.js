@@ -10,11 +10,19 @@ var FunctionType;
 (function (FunctionType) {
     FunctionType[FunctionType["None"] = 0] = "None";
     FunctionType[FunctionType["FUNC"] = 1] = "FUNC";
+    FunctionType[FunctionType["METHOD"] = 2] = "METHOD";
+    FunctionType[FunctionType["INITIALIZER"] = 3] = "INITIALIZER";
 })(FunctionType || (FunctionType = {}));
+var ClassType;
+(function (ClassType) {
+    ClassType[ClassType["NONE"] = 0] = "NONE";
+    ClassType[ClassType["CLASS"] = 1] = "CLASS";
+})(ClassType || (ClassType = {}));
 class Resolver {
     constructor(interpreter) {
         this.scopes = [];
         this.currentFunction = FunctionType.None;
+        this.currentClass = ClassType.NONE;
         this.interpreter = interpreter;
     }
     visitBlockStmt(stmt) {
@@ -23,8 +31,21 @@ class Resolver {
         this.endScope();
     }
     visitClassStmt(stmt) {
+        const enclosingClass = this.currentClass;
+        this.currentClass = ClassType.CLASS;
         this.declare(stmt.name);
         this.define(stmt.name);
+        this.beginScope();
+        this.scopes.at(-1).set("this", true);
+        for (const method of stmt.methods) {
+            let declaration = FunctionType.METHOD;
+            if (method.name.lexeme === "init") {
+                declaration = FunctionType.INITIALIZER;
+            }
+            this.resolveFunction(method, declaration);
+        }
+        this.endScope();
+        this.currentClass = enclosingClass;
         return null;
     }
     resolve(statements) {
@@ -127,6 +148,9 @@ class Resolver {
             Lox_1.default.error(stmt.keyword, "Can't return from top-level code");
         }
         if (stmt.value != null) {
+            if (this.currentFunction === FunctionType.INITIALIZER) {
+                Lox_1.default.error(stmt.keyword, "Can't return a value from an initializer.");
+            }
             this.resolveExpr(stmt.value);
         }
         return null;
@@ -162,6 +186,19 @@ class Resolver {
     visitLogicalExpr(expr) {
         this.resolveExpr(expr.left);
         this.resolveExpr(expr.right);
+        return null;
+    }
+    visitSetExpr(expr) {
+        this.resolveExpr(expr.value);
+        this.resolveExpr(expr.obj);
+        return null;
+    }
+    visitThisExpr(expr) {
+        if (this.currentClass === ClassType.NONE) {
+            Lox_1.default.error(expr.keyword, "Can't use 'this' outside of a class.");
+            return null;
+        }
+        this.resolveLocal(expr, expr.keyword);
         return null;
     }
     visitUnaryExpr(expr) {

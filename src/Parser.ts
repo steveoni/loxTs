@@ -359,6 +359,8 @@ export default class Parser {
       return new Exprs.LiteralExpr(this.previous().literal)
     }
 
+    if (this.match(TokenType.This)) return new Exprs.ThisExpr(this.previous())
+
     if (this.match(TokenType.Identifier)) {
       return new Exprs.VariableExpr(this.previous())
     }

@@ -18,6 +18,7 @@ class GenerateAst {
             Logical: "left: Expr, operator: Token, right: Expr",
             Unary: "operator: Token, right: Expr",
             Set: "obj: Expr, name: Token, value: Expr",
+            This: "keyword: Token",
             Variable: "name: Token"
         });
         GenerateAst.defineAst(outputDir, 'Stmt', {

@@ -9,13 +9,21 @@ poly();
 
 enum FunctionType {
   None,
-  FUNC
+  FUNC,
+  METHOD,
+  INITIALIZER
+}
+
+enum ClassType {
+  NONE,
+  CLASS
 }
 
 export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> {
   private readonly interpreter: Interpreter
   private readonly scopes: Array<Map<string, boolean>> = []
   private currentFunction: FunctionType = FunctionType.None
+  private currentClass = ClassType.NONE
   constructor(interpreter: Interpreter) {
     this.interpreter = interpreter
   }
@@ -27,8 +35,22 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
   }
 
   public visitClassStmt(stmt: Stmt.ClassStmt) {
+    const enclosingClass = this.currentClass
+    this.currentClass = ClassType.CLASS
     this.declare(stmt.name)
     this.define(stmt.name);
+    this.beginScope();
+    this.scopes.at(-1).set("this", true)
+
+    for (const method of stmt.methods) {
+      let declaration = FunctionType.METHOD
+      if (method.name.lexeme === "init") {
+        declaration = FunctionType.INITIALIZER
+      }
+      this.resolveFunction(method, declaration)
+    }
+    this.endScope()
+    this.currentClass = enclosingClass
     return null;
   }
 
@@ -147,6 +169,10 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
       Lox.error(stmt.keyword, "Can't return from top-level code");
     }
     if (stmt.value != null) {
+      if (this.currentFunction === FunctionType.INITIALIZER) {
+        Lox.error(stmt.keyword,
+          "Can't return a value from an initializer.");
+      }
       this.resolveExpr(stmt.value)
     }
     return null;
@@ -195,6 +221,16 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
   public visitSetExpr(expr: Expr.SetExpr) {
     this.resolveExpr(expr.value)
     this.resolveExpr(expr.obj)
+    return null;
+  }
+
+  public visitThisExpr(expr: Expr.ThisExpr) {
+    if (this.currentClass === ClassType.NONE) {
+      Lox.error(expr.keyword,
+        "Can't use 'this' outside of a class.")
+      return null;
+    }
+    this.resolveLocal(expr, expr.keyword)
     return null;
   }
 

@@ -15,6 +15,7 @@ export interface Visitor<R> {
   visitLogicalExpr ( expr: LogicalExpr ): R
   visitUnaryExpr ( expr: UnaryExpr ): R
   visitSetExpr ( expr: SetExpr ): R
+  visitThisExpr ( expr: ThisExpr ): R
   visitVariableExpr ( expr: VariableExpr ): R
   }
 
@@ -136,6 +137,17 @@ export class SetExpr implements Expr {
 
   accept<R>(visitor: Visitor<R>): R{
     return visitor.visitSetExpr (this);
+  }
+}
+
+export class ThisExpr implements Expr {
+  keyword: Token
+  constructor ( keyword: Token ) {
+    this.keyword = keyword;
+  }
+
+  accept<R>(visitor: Visitor<R>): R{
+    return visitor.visitThisExpr (this);
   }
 }
 

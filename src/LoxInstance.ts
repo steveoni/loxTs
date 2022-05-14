@@ -1,4 +1,5 @@
 import LoxClass from "./LoxClass"
+import LoxFunction from "./LoxFunction";
 import RuntimeError from "./RuntimeError";
 import { Token } from "./Tokens";
 
@@ -13,6 +14,9 @@ export default class LoxInstance {
     if (this.fields.has(name.lexeme)) {
       return this.fields.get(name.lexeme)
     }
+
+    const method: LoxFunction = this.klass.findMethod(name.lexeme)
+    if (method !== null) return method.bind(this);
 
     throw new RuntimeError(name,
       `Undefined property ${name.lexeme}.`)

@@ -63,6 +63,10 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     return value;
   }
 
+  public visitThisExpr(expr: Expr.ThisExpr): any {
+    return this.lookUpVariable(expr.keyword, expr)
+  }
+
   public visitGroupingExpr(expr: Expr.GroupingExpr) {
     return this.evaluate(expr)
   }
@@ -101,7 +105,14 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
 
   public visitClassStmt(stmt: Stmt.ClassStmt) {
     this.environment.define(stmt.name.lexeme, null)
-    const klass = new LoxClass(stmt.name.lexeme)
+
+    const methods = new Map<string, LoxFunction>()
+    for (const method of stmt.methods) {
+      const func = new LoxFunction(method, this.environment,
+        (method.name.lexeme === "init"))
+      methods.set(method.name.lexeme, func)
+    }
+    const klass = new LoxClass(stmt.name.lexeme, methods)
     this.environment.assign(stmt.name, klass)
     return null;
   }
@@ -112,7 +123,7 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
   }
 
   public visitFunctionStmt(stmt: Stmt.FunctionStmt) {
-    const func = new LoxFunction(stmt, this.environment)
+    const func = new LoxFunction(stmt, this.environment, false)
     this.environment.define(stmt.name.lexeme, func)
     return null;
   }

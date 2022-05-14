@@ -5,9 +5,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const Environment_1 = __importDefault(require("./Environment"));
 class LoxFunction {
-    constructor(declaration, closure) {
+    constructor(declaration, closure, isInitializer) {
         this.closure = closure;
         this.declaration = declaration;
+        this.isInitializer = isInitializer;
     }
     call(interpreter, argument) {
         const enviroment = new Environment_1.default(this.closure);
@@ -18,8 +19,12 @@ class LoxFunction {
             interpreter.executeBlock(this.declaration.body, enviroment);
         }
         catch (returnValue) {
+            if (this.isInitializer)
+                return this.closure.getAt(0, "this");
             return returnValue.value;
         }
+        if (this.isInitializer)
+            return this.closure.getAt(0, "this");
         return null;
     }
     arity() {
@@ -27,6 +32,11 @@ class LoxFunction {
     }
     toString() {
         return `<fn ${this.declaration.name.lexeme} >`;
+    }
+    bind(instance) {
+        const enviroment = new Environment_1.default(this.closure);
+        enviroment.define("this", instance);
+        return new LoxFunction(this.declaration, enviroment, this.isInitializer);
     }
 }
 exports.default = LoxFunction;
