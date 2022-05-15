@@ -5,7 +5,7 @@ Implementation of Lox programming language in Typescript, Following the book cra
 To run a lox file 
 
 ```
-yarn tslox-dev me.lox
+yarn tslox-dev code.lox
 ```
 
 To enable REPL shell for lox
