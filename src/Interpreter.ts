@@ -63,6 +63,20 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
     return value;
   }
 
+  public visitSuperExpr(expr: Expr.SuperExpr): any {
+    const distance = this.locals.get(expr)
+    const superclass = this.environment.getAt(distance, "super") as LoxClass
+    const obj = this.environment.getAt(distance -1, 'this') as LoxInstance;
+    const method = superclass.findMethod(expr.method.lexeme)
+
+    if ( method === null) {
+      throw new RuntimeError(expr.method,
+        `Undefined prooperty ${expr.method.lexeme}.`);
+    }
+    return method.bind(obj)
+
+  }
+
   public visitThisExpr(expr: Expr.ThisExpr): any {
     return this.lookUpVariable(expr.keyword, expr)
   }
@@ -104,7 +118,20 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
   }
 
   public visitClassStmt(stmt: Stmt.ClassStmt) {
+    let superClass = null;
+    if (stmt.superclass !== null) {
+      superClass = this.evaluate(stmt.superclass)
+      if (!(superClass instanceof LoxClass)) {
+        throw new RuntimeError(stmt.superclass.name,
+          "Superclass must be a class.")
+      }
+    }
     this.environment.define(stmt.name.lexeme, null)
+
+    if (stmt.superclass !== null ) {
+      this.environment = new Environment(this.environment)
+      this.environment.define("super", superClass)
+    }
 
     const methods = new Map<string, LoxFunction>()
     for (const method of stmt.methods) {
@@ -112,7 +139,11 @@ export default class Interpreter implements Expr.Visitor<any>, Stmt.Visitor<void
         (method.name.lexeme === "init"))
       methods.set(method.name.lexeme, func)
     }
-    const klass = new LoxClass(stmt.name.lexeme, methods)
+    const klass = new LoxClass(stmt.name.lexeme, superClass as LoxClass, methods)
+
+    if (superClass != null) {
+      this.environment = this.environment.enclosing;
+    }
     this.environment.assign(stmt.name, klass)
     return null;
   }

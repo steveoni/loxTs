@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.VariableExpr = exports.ThisExpr = exports.SetExpr = exports.UnaryExpr = exports.LogicalExpr = exports.LiteralExpr = exports.GroupingExpr = exports.GetExpr = exports.CallExpr = exports.BinaryExpr = exports.AssignExpr = void 0;
+exports.VariableExpr = exports.ThisExpr = exports.SuperExpr = exports.SetExpr = exports.UnaryExpr = exports.LogicalExpr = exports.LiteralExpr = exports.GroupingExpr = exports.GetExpr = exports.CallExpr = exports.BinaryExpr = exports.AssignExpr = void 0;
 class AssignExpr {
     constructor(name, value) {
         this.name = name;
@@ -93,6 +93,16 @@ class SetExpr {
     }
 }
 exports.SetExpr = SetExpr;
+class SuperExpr {
+    constructor(keyword, method) {
+        this.keyword = keyword;
+        this.method = method;
+    }
+    accept(visitor) {
+        return visitor.visitSuperExpr(this);
+    }
+}
+exports.SuperExpr = SuperExpr;
 class ThisExpr {
     constructor(keyword) {
         this.keyword = keyword;

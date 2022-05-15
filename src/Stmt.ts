@@ -1,5 +1,5 @@
 import { Token } from "./tokens";
-import { Expr } from "./Expr";
+import { Expr, VariableExpr } from "./Expr";
 
 
 export interface Stmt {
@@ -31,9 +31,11 @@ export class BlockStmt implements Stmt {
 
 export class ClassStmt implements Stmt {
   name: Token
+  superclass: VariableExpr
   methods: FunctionStmt[]
-  constructor ( name: Token, methods: FunctionStmt[] ) {
+  constructor ( name: Token, superclass: VariableExpr, methods: FunctionStmt[] ) {
     this.name = name;
+    this.superclass = superclass;
     this.methods = methods;
   }
 

@@ -17,6 +17,7 @@ var ClassType;
 (function (ClassType) {
     ClassType[ClassType["NONE"] = 0] = "NONE";
     ClassType[ClassType["CLASS"] = 1] = "CLASS";
+    ClassType[ClassType["SUBCLASS"] = 2] = "SUBCLASS";
 })(ClassType || (ClassType = {}));
 class Resolver {
     constructor(interpreter) {
@@ -35,6 +36,18 @@ class Resolver {
         this.currentClass = ClassType.CLASS;
         this.declare(stmt.name);
         this.define(stmt.name);
+        if (stmt.superclass !== null &&
+            (stmt.name.lexeme === stmt.superclass.name.lexeme)) {
+            Lox_1.default.error(stmt.superclass.name, "A class can't inherit from itself.");
+        }
+        if (stmt.superclass != null) {
+            this.currentClass = ClassType.SUBCLASS;
+            this.resolveExpr(stmt.superclass);
+        }
+        if (stmt.superclass !== null) {
+            this.beginScope();
+            this.scopes.at(-1).set("super", true);
+        }
         this.beginScope();
         this.scopes.at(-1).set("this", true);
         for (const method of stmt.methods) {
@@ -45,12 +58,14 @@ class Resolver {
             this.resolveFunction(method, declaration);
         }
         this.endScope();
+        if (stmt.superclass !== null)
+            this.endScope();
         this.currentClass = enclosingClass;
         return null;
     }
     resolve(statements) {
         if (statements) {
-            for (let statement of statements) {
+            for (const statement of statements) {
                 this.resolveStmt(statement);
             }
         }
@@ -191,6 +206,16 @@ class Resolver {
     visitSetExpr(expr) {
         this.resolveExpr(expr.value);
         this.resolveExpr(expr.obj);
+        return null;
+    }
+    visitSuperExpr(expr) {
+        if (this.currentClass === ClassType.NONE) {
+            Lox_1.default.error(expr.keyword, "Can't use 'super' outside of a class.");
+        }
+        else if (this.currentClass !== ClassType.SUBCLASS) {
+            Lox_1.default.error(expr.keyword, "Can't use 'super' in a class with no superclass.");
+        }
+        this.resolveLocal(expr, expr.keyword);
         return null;
     }
     visitThisExpr(expr) {

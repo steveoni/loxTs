@@ -16,7 +16,8 @@ enum FunctionType {
 
 enum ClassType {
   NONE,
-  CLASS
+  CLASS,
+  SUBCLASS
 }
 
 export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> {
@@ -39,6 +40,22 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
     this.currentClass = ClassType.CLASS
     this.declare(stmt.name)
     this.define(stmt.name);
+
+    if (stmt.superclass !== null && 
+          (stmt.name.lexeme === stmt.superclass.name.lexeme )) {
+        Lox.error(stmt.superclass.name,
+          "A class can't inherit from itself.")
+    }
+
+    if (stmt.superclass != null) {
+      this.currentClass = ClassType.SUBCLASS
+      this.resolveExpr(stmt.superclass)
+    }
+
+    if (stmt.superclass !== null ) {
+      this.beginScope();
+      this.scopes.at(-1).set("super", true)
+    }
     this.beginScope();
     this.scopes.at(-1).set("this", true)
 
@@ -50,13 +67,15 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
       this.resolveFunction(method, declaration)
     }
     this.endScope()
+
+    if (stmt.superclass !== null )  this.endScope();
     this.currentClass = enclosingClass
     return null;
   }
 
   public resolve (statements: Stmt.Stmt[]) { 
     if (statements) {
-      for (let statement of statements) {
+      for (const statement of statements) {
         this.resolveStmt(statement)
       }
     }
@@ -221,6 +240,18 @@ export default class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> 
   public visitSetExpr(expr: Expr.SetExpr) {
     this.resolveExpr(expr.value)
     this.resolveExpr(expr.obj)
+    return null;
+  }
+
+  public visitSuperExpr(expr: Expr.SuperExpr) {
+    if ( this.currentClass === ClassType.NONE) {
+      Lox.error(expr.keyword,
+        "Can't use 'super' outside of a class.")
+    } else if (this.currentClass !== ClassType.SUBCLASS) {
+      Lox.error(expr.keyword,
+        "Can't use 'super' in a class with no superclass.")
+    }
+    this.resolveLocal(expr, expr.keyword)
     return null;
   }
 

@@ -11,8 +11,9 @@ class BlockStmt {
 }
 exports.BlockStmt = BlockStmt;
 class ClassStmt {
-    constructor(name, methods) {
+    constructor(name, superclass, methods) {
         this.name = name;
+        this.superclass = superclass;
         this.methods = methods;
     }
     accept(visitor) {

@@ -55,6 +55,16 @@ class Interpreter {
         obj.set(expr.name, value);
         return value;
     }
+    visitSuperExpr(expr) {
+        const distance = this.locals.get(expr);
+        const superclass = this.environment.getAt(distance, "super");
+        const obj = this.environment.getAt(distance - 1, 'this');
+        const method = superclass.findMethod(expr.method.lexeme);
+        if (method === null) {
+            throw new RuntimeError_1.default(expr.method, `Undefined prooperty ${expr.method.lexeme}.`);
+        }
+        return method.bind(obj);
+    }
     visitThisExpr(expr) {
         return this.lookUpVariable(expr.keyword, expr);
     }
@@ -87,13 +97,27 @@ class Interpreter {
         return null;
     }
     visitClassStmt(stmt) {
+        let superClass = null;
+        if (stmt.superclass !== null) {
+            superClass = this.evaluate(stmt.superclass);
+            if (!(superClass instanceof LoxClass_1.default)) {
+                throw new RuntimeError_1.default(stmt.superclass.name, "Superclass must be a class.");
+            }
+        }
         this.environment.define(stmt.name.lexeme, null);
+        if (stmt.superclass !== null) {
+            this.environment = new Environment_1.default(this.environment);
+            this.environment.define("super", superClass);
+        }
         const methods = new Map();
         for (const method of stmt.methods) {
             const func = new LoxFunction_1.default(method, this.environment, (method.name.lexeme === "init"));
             methods.set(method.name.lexeme, func);
         }
-        const klass = new LoxClass_1.default(stmt.name.lexeme, methods);
+        const klass = new LoxClass_1.default(stmt.name.lexeme, superClass, methods);
+        if (superClass != null) {
+            this.environment = this.environment.enclosing;
+        }
         this.environment.assign(stmt.name, klass);
         return null;
     }

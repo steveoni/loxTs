@@ -18,12 +18,13 @@ class GenerateAst {
             Logical: "left: Expr, operator: Token, right: Expr",
             Unary: "operator: Token, right: Expr",
             Set: "obj: Expr, name: Token, value: Expr",
+            Super: "keyword: Token, method: Token",
             This: "keyword: Token",
             Variable: "name: Token"
         });
         GenerateAst.defineAst(outputDir, 'Stmt', {
             Block: "statements: Stmt[]",
-            Class: "name: Token, methods: FunctionStmt[]",
+            Class: "name: Token, superclass: VariableExpr, methods: FunctionStmt[]",
             Expression: "expression: Expr",
             Function: "name: Token, params: Token[], body: Stmt[]",
             If: "condition: Expr, thenBranch: Stmt, elseBranch: Stmt",

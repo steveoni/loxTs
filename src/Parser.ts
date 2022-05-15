@@ -46,13 +46,18 @@ export default class Parser {
 
   private classDeclaration(): Stmt {
     const name = this.consume(TokenType.Identifier, "Expect class name")
+    let superClass: Exprs.VariableExpr = null;
+    if (this.match(TokenType.Less)) {
+      this.consume(TokenType.Identifier, "Expect superclass name.")
+      superClass = new Exprs.VariableExpr(this.previous())
+    }
     this.consume(TokenType.LeftBrace, "Expect '{' before class body.")
     const methods: FunctionStmt[] = [];
     while (!this.check(TokenType.RightBrace) && !this.isAtEnd()) {
       methods.push(this.function("method"))
     }
     this.consume(TokenType.RightBrace, "Expect '}' after class body.")
-    return new ClassStmt(name, methods)
+    return new ClassStmt(name, superClass, methods)
   }
 
   private varDeclaration(): Stmt {
@@ -357,6 +362,14 @@ export default class Parser {
 
     if (this.match(TokenType.Number, TokenType.String)) {
       return new Exprs.LiteralExpr(this.previous().literal)
+    }
+
+    if (this.match(TokenType.Super)) {
+      const keyword = this.previous();
+      this.consume(TokenType.Dot, "Expect '.' after 'super'.")
+      const method = this.consume(TokenType.Identifier,
+        "Expect superclass method name");
+      return new Exprs.SuperExpr(keyword, method)
     }
 
     if (this.match(TokenType.This)) return new Exprs.ThisExpr(this.previous())
